@@ -16,7 +16,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:orientation="vertical"
-        android:padding="40dp">
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:paddingBottom="0dp">
 
         <ImageView
             android:layout_width="wrap_content"
@@ -66,6 +68,18 @@
             android:text="Zaloguj"
             android:textColor="#FFFFFF"
             android:background="#44CCCCCC"/>
+
+        <TextView
+            android:id="@+id/tv_register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="20dp"
+            android:textAlignment="center"
+            android:paddingTop="12dp"
+            android:text="Zarejestruj się"
+            android:onClick="onRegisterClick"
+            android:clickable="true"/>
     </LinearLayout>
 
     <RelativeLayout

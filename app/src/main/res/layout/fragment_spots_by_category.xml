@@ -5,9 +5,60 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <TextView
-        android:layout_width="wrap_content"
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="aaaaaa"/>
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/iv_spot_category_image"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_menu_camera"/>
+
+        <TextView
+            android:id="@+id/tv_spot_category_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Restauracje"
+            android:layout_gravity="center_horizontal"
+            android:paddingLeft="10dp"
+            android:layout_marginRight="30dp"
+            android:textSize="34sp" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider_category_name"
+        android:layout_width="fill_parent"
+        android:layout_height="2dp"
+        android:background="#CCCCCC" />
+
+
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF">
+
+        <GridView
+            android:id="@+id/gridView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:drawSelectorOnTop="true"
+            android:gravity="center"
+            android:numColumns="2"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="10dp"
+            android:horizontalSpacing="10dp"
+            android:focusable="true"
+            android:clickable="true"/>
+
+    </RelativeLayout>
 
 </LinearLayout>

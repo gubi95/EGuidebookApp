@@ -3,6 +3,7 @@ package eguidebook.eguidebookapp;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.icu.text.DateFormat;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,15 +13,22 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
 public class LoginActivity extends AppCompatActivity {
+    public boolean _bIsRegisterMode = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity);
+
+        _bIsRegisterMode = false;
+        this.setViewDependsOnMode();
 
         getSupportActionBar().hide();
 
@@ -29,28 +37,35 @@ public class LoginActivity extends AppCompatActivity {
         findViewById(R.id.btn_login).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditText etLogin = (EditText) findViewById(R.id.te_login);
-                EditText etPassword = (EditText) findViewById(R.id.te_password);
+                EGuidebookApplication.mGPSTrackerService = new GPSTrackerService(objActivityCurrent);
+                if (!EGuidebookApplication.mGPSTrackerService.canGetLocation()) {
+                    return;
+                }
 
-                etLogin.setText("happywitcher@gmail.com");
-                etPassword.setText("aB34567!");
+                final EditText etLogin = (EditText) findViewById(R.id.te_login);
+                final EditText etPassword = (EditText) findViewById(R.id.te_password);
 
-                String strUsername = etLogin.getText().toString();
-                String strPassword = etPassword.getText().toString();
+                if(!_bIsRegisterMode) {
+                    etLogin.setText("happywitcher@gmail.com");
+                    etPassword.setText("aB34567!");
+                }
+
+                final String strUsername = etLogin.getText().toString();
+                final String strPassword = etPassword.getText().toString();
 
                 boolean bIsValid = true;
 
-                if(!PLHelpers.isEmailValid(strUsername)) {
+                if (!PLHelpers.isEmailValid(strUsername)) {
                     bIsValid = false;
                     etLogin.setError("Adres e-mail jest nieprawidłowy");
                 }
 
-                if(PLHelpers.stringIsNullOrEmpty(strPassword)) {
+                if (PLHelpers.stringIsNullOrEmpty(strPassword)) {
                     bIsValid = false;
                     etPassword.setError("Prosze wpisać hasło");
                 }
 
-                if(!bIsValid) {
+                if (!bIsValid) {
                     return;
                 }
 
@@ -59,23 +74,35 @@ public class LoginActivity extends AppCompatActivity {
                 EGuidebookApplication.mUsername = strUsername;
                 EGuidebookApplication.mPassword = strPassword;
 
+
                 new AsyncTask<Void, Void, WebAPIManager.LoginReply>() {
                     @Override
                     protected WebAPIManager.LoginReply doInBackground(Void... voids) {
                         try {
                             Thread.sleep(1000);
-                        }
-                        catch (InterruptedException e) { }
-                        return new WebAPIManager().login();
+                        } catch (InterruptedException e) { }
+                        return _bIsRegisterMode ? new WebAPIManager().register(strUsername, strPassword) : new WebAPIManager().login();
                     }
 
                     @Override
                     protected void onPostExecute(WebAPIManager.LoginReply objLoginReply) {
-                        if(!objLoginReply.isSuccess()) {
+                        if (!objLoginReply.isSuccess()) {
                             EGuidebookApplication.mUsername = "";
                             EGuidebookApplication.mPassword = "";
-                        }
-                        else {
+
+                            switch(objLoginReply.Code) {
+                                case WebAPIManager.CODE_USER_ALREADY_EXISTS:
+                                    etLogin.setError("Podany użytwkonik już istnieje");
+                                    break;
+                                case WebAPIManager.CODE_INCORRECT_USERNAME:
+                                    etLogin.setError("Adres e-mail jest nieprawidłowy");
+                                    break;
+                                case WebAPIManager.CODE_INCORRECT_PASSWORD:
+                                    etPassword.setError("Hasło powinno zawierać conajmniej 1 wielką literę oraz 1 znak specjalny");
+                                    break;
+                            }
+
+                        } else {
                             EGuidebookApplication.mSpotCategories = objLoginReply.getSpotCategoriesAsArrayList() != null ?
                                     objLoginReply.getSpotCategoriesAsArrayList() : new ArrayList<WebAPIManager.SpotCategory>();
 
@@ -87,6 +114,27 @@ public class LoginActivity extends AppCompatActivity {
                 }.execute();
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(this._bIsRegisterMode) {
+            this._bIsRegisterMode = false;
+            setViewDependsOnMode();
+        }
+        else {
+            super.onBackPressed();
+        }
+    }
+
+    public void onRegisterClick(View view) {
+        this._bIsRegisterMode = true;
+        this.setViewDependsOnMode();
+    }
+
+    public void setViewDependsOnMode() {
+        ((Button) findViewById(R.id.btn_login)).setText(this._bIsRegisterMode ? "Zarejestruj" : "Zaloguj");
+        ((TextView)findViewById(R.id.tv_register)).setTextColor(Color.parseColor(this._bIsRegisterMode ? "#00FFFFFF" : "#FFFFFF"));
     }
 
     @Nullable

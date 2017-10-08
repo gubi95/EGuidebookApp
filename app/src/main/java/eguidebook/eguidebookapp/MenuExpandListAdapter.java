@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,6 +17,8 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 public class MenuExpandListAdapter extends BaseExpandableListAdapter {
+
+    private ExpandableListView _objExpandableListView = null;
 
     public static class ExpandableItem {
         private long _lId;
@@ -78,7 +81,8 @@ public class MenuExpandListAdapter extends BaseExpandableListAdapter {
     private Context _objContext;
     private List<ExpandableItem> _listExpandableItem;
 
-    public MenuExpandListAdapter(Context objContext, List<ExpandableItem> listExpandableItem) {
+    public MenuExpandListAdapter(Context objContext, List<ExpandableItem> listExpandableItem, ExpandableListView objExpandableListView) {
+        this._objExpandableListView = objExpandableListView;
         this._objContext = objContext;
         this._listExpandableItem = listExpandableItem;
     }
