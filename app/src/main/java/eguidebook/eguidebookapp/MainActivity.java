@@ -200,9 +200,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         MenuExpandListAdapter.ExpandableItem objExpandableItemCategories = new MenuExpandListAdapter.ExpandableItem("Miejsca", true, listExpandableItemChildCategories);
+        MenuExpandListAdapter.ExpandableItem objExpandableItemAddSpot = new MenuExpandListAdapter.ExpandableItem("Zaproponuj miejsce", true, new ArrayList<MenuExpandListAdapter.ExpandableItemChild>());
         MenuExpandListAdapter.ExpandableItem objExpandableItemLogout = new MenuExpandListAdapter.ExpandableItem("Wyloguj", false, new ArrayList<MenuExpandListAdapter.ExpandableItemChild>());
 
         listExpandableItem.add(objExpandableItemCategories);
+        listExpandableItem.add(objExpandableItemAddSpot);
         listExpandableItem.add(objExpandableItemLogout);
     }
 
@@ -219,8 +221,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         objExpandableListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
             public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
-                // logout
+                // create spot
                 if(groupPosition == 1) {
+
+                }
+                // logout
+                else if(groupPosition == 2) {
                     EGuidebookApplication.logout(new EGuidebookApplication.ILogoutSuccessCallback() {
                         @Override
                         public void doAction() {

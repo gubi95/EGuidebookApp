@@ -17,7 +17,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
+
+import mehdi.sakout.fancybuttons.FancyButton;
 
 public class LoginActivity extends AppCompatActivity {
     public boolean _bIsRegisterMode = false;
@@ -62,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 if (PLHelpers.stringIsNullOrEmpty(strPassword)) {
                     bIsValid = false;
-                    etPassword.setError("Prosze wpisać hasło");
+                    etPassword.setError("Proszę wpisać hasło");
                 }
 
                 if (!bIsValid) {
@@ -73,7 +77,6 @@ public class LoginActivity extends AppCompatActivity {
 
                 EGuidebookApplication.mUsername = strUsername;
                 EGuidebookApplication.mPassword = strPassword;
-
 
                 new AsyncTask<Void, Void, WebAPIManager.LoginReply>() {
                     @Override
@@ -133,8 +136,17 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void setViewDependsOnMode() {
-        ((Button) findViewById(R.id.btn_login)).setText(this._bIsRegisterMode ? "Zarejestruj" : "Zaloguj");
+        ((FancyButton) findViewById(R.id.btn_login)).setText(this._bIsRegisterMode ? "Zarejestruj" : "Zaloguj");
         ((TextView)findViewById(R.id.tv_register)).setTextColor(Color.parseColor(this._bIsRegisterMode ? "#00FFFFFF" : "#FFFFFF"));
+
+        EditText etLogin = (EditText) findViewById(R.id.te_login);
+        EditText etPassword = (EditText) findViewById(R.id.te_password);
+
+        etLogin.setText("");
+        etLogin.setError(null);
+
+        etPassword.setText("");
+        etPassword.setError(null);
     }
 
     @Nullable
