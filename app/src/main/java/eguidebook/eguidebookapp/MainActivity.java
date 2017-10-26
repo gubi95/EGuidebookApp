@@ -223,7 +223,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
                 // create spot
                 if(groupPosition == 1) {
-
+                    FragmentManager objFragmentManager = getSupportFragmentManager();
+                    FragmentTransaction objFragmentTransaction = objFragmentManager.beginTransaction();
+                    FragmentCreateSpot objFragmentCreateSpot = FragmentCreateSpot.newInstance();
+                    objFragmentTransaction.replace(R.id.main_content, objFragmentCreateSpot);
+                    objFragmentTransaction.commit();
+                    closeDrawer();
                 }
                 // logout
                 else if(groupPosition == 2) {

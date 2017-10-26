@@ -189,6 +189,22 @@ public class WebAPIManager {
         public String Image4Path;
         public String Image5Path;
         public int AverageGrade;
+        public boolean IsOpeningHoursDefined;
+        public String OpeningHours_MondayFrom;
+        public String OpeningHours_MondayTo;
+        public String OpeningHours_TuesdayFrom;
+        public String OpeningHours_TuesdayTo;
+        public String OpeningHours_WednesdayFrom;
+        public String OpeningHours_WednesdayTo;
+        public String OpeningHours_ThursdayFrom;
+        public String OpeningHours_ThursdayTo;
+        public String OpeningHours_FridayFrom;
+        public String OpeningHours_FridayTo;
+        public String OpeningHours_SaturdayFrom;
+        public String OpeningHours_SaturdayTo;
+        public String OpeningHours_SundayFrom;
+        public String OpeningHours_SundayTo;
+        public int UserGrade;
 
         protected Spot(Parcel in) {
             SpotID = in.readString();
@@ -203,6 +219,22 @@ public class WebAPIManager {
             Image4Path = in.readString();
             Image5Path = in.readString();
             AverageGrade = in.readInt();
+            IsOpeningHoursDefined = in.readByte() != 0;
+            OpeningHours_MondayFrom = in.readString();
+            OpeningHours_MondayTo = in.readString();
+            OpeningHours_TuesdayFrom = in.readString();
+            OpeningHours_TuesdayTo = in.readString();
+            OpeningHours_WednesdayFrom = in.readString();
+            OpeningHours_WednesdayTo = in.readString();
+            OpeningHours_ThursdayFrom = in.readString();
+            OpeningHours_ThursdayTo = in.readString();
+            OpeningHours_FridayFrom = in.readString();
+            OpeningHours_FridayTo = in.readString();
+            OpeningHours_SaturdayFrom = in.readString();
+            OpeningHours_SaturdayTo = in.readString();
+            OpeningHours_SundayFrom = in.readString();
+            OpeningHours_SundayTo = in.readString();
+            UserGrade = in.readInt();
         }
 
         public final Creator<Spot> CREATOR = new Creator<Spot>() {
@@ -236,6 +268,22 @@ public class WebAPIManager {
             parcel.writeString(Image4Path);
             parcel.writeString(Image5Path);
             parcel.writeInt(AverageGrade);
+            parcel.writeByte((byte) (IsOpeningHoursDefined ? 1 : 0));
+            parcel.writeString(OpeningHours_MondayFrom);
+            parcel.writeString(OpeningHours_MondayTo);
+            parcel.writeString(OpeningHours_TuesdayFrom);
+            parcel.writeString(OpeningHours_TuesdayTo);
+            parcel.writeString(OpeningHours_WednesdayFrom);
+            parcel.writeString(OpeningHours_WednesdayTo);
+            parcel.writeString(OpeningHours_ThursdayFrom);
+            parcel.writeString(OpeningHours_ThursdayTo);
+            parcel.writeString(OpeningHours_FridayFrom);
+            parcel.writeString(OpeningHours_FridayTo);
+            parcel.writeString(OpeningHours_SaturdayFrom);
+            parcel.writeString(OpeningHours_SaturdayTo);
+            parcel.writeString(OpeningHours_SundayFrom);
+            parcel.writeString(OpeningHours_SundayTo);
+            parcel.writeInt(UserGrade);
         }
     }
 
@@ -262,5 +310,63 @@ public class WebAPIManager {
         }
 
         return objGetSpotsByReply;
+    }
+
+    private class CreateGradePostData {
+        public String SpotID;
+        public int Grade;
+        public String Message;
+    }
+
+    public WebAPIReply createSpotGrade(int nGrade, String strSpotID) {
+        WebAPIReply objWebAPIReply = null;
+        CreateGradePostData objCreateGradePostData = new CreateGradePostData();
+        objCreateGradePostData.SpotID = strSpotID;
+        objCreateGradePostData.Grade = nGrade;
+        objCreateGradePostData.Message = "";
+
+        try {
+            objWebAPIReply = new Gson().fromJson(this.uploadString(strBaseURL + "/api/SpotGrade/Create", new Gson().toJson(objCreateGradePostData, CreateGradePostData.class)), WebAPIReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objWebAPIReply == null) {
+            objWebAPIReply = new WebAPIReply();
+            objWebAPIReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objWebAPIReply.Message = this.INTERNAL_SERVER_ERROR;
+        }
+
+        return objWebAPIReply;
+    }
+
+    private class CreateSpotPostData {
+        public String Name;
+        public String ImageBase64;
+        public double CoorX;
+        public double CoorY;
+        public int UserGrade;
+    }
+
+    public WebAPIReply createSpot(String strName, double dCoorX, double dCoorY, String strBase64Image, int nUserGrade) {
+        WebAPIReply objWebAPIReply = null;
+        CreateSpotPostData objCreateSpotPostData = new CreateSpotPostData();
+        objCreateSpotPostData.Name = strName;
+        objCreateSpotPostData.ImageBase64 = strBase64Image;
+        objCreateSpotPostData.CoorX = dCoorX;
+        objCreateSpotPostData.CoorY = dCoorY;
+        objCreateSpotPostData.UserGrade = nUserGrade;
+
+        try {
+            objWebAPIReply = new Gson().fromJson(this.uploadString(strBaseURL + "/api/Spot/Create", new Gson().toJson(objCreateSpotPostData, CreateSpotPostData.class)), WebAPIReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objWebAPIReply == null) {
+            objWebAPIReply = new WebAPIReply();
+            objWebAPIReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objWebAPIReply.Message = this.INTERNAL_SERVER_ERROR;
+        }
+
+        return objWebAPIReply;
     }
 }

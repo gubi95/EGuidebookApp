@@ -1,13 +1,10 @@
 package eguidebook.eguidebookapp;
 
-import android.app.Activity;
 import android.content.Context;
-import android.media.Image;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.ThemedSpinnerAdapter;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +15,7 @@ import com.squareup.picasso.Picasso;
 
 public class FragmentSpotDetails extends Fragment {
     private WebAPIManager.Spot _objSpot = null;
+    private int nSelectedUserGrade = -1;
 
     @Nullable
     @Override
@@ -44,11 +42,18 @@ public class FragmentSpotDetails extends Fragment {
 
         ((TextView) objView.findViewById(R.id.tv_spot_name)).setText(_objSpot.Name);
 
-        CollapseRowManager.setup(objView.findViewById(R.id.row_description), "Opis");
+        CollapseRowManager.setup(objView.findViewById(R.id.row_description), "Opis", CollapseRowManager.Type.TEXT);
         CollapseRowManager.setText(objView.findViewById(R.id.row_description), _objSpot.Description);
 
-        CollapseRowManager.setup(objView.findViewById(R.id.row_opening_hours), "Godziny otwarcia");
-        CollapseRowManager.setText(objView.findViewById(R.id.row_opening_hours), "");
+        if(_objSpot.IsOpeningHoursDefined) {
+            CollapseRowManager.setup(objView.findViewById(R.id.row_opening_hours), "Godziny otwarcia", CollapseRowManager.Type.DOUBLE_TEXT);
+            CollapseRowManager.setText(objView.findViewById(R.id.row_opening_hours), this.buildOpeningHoursString(_objSpot)[0], this.buildOpeningHoursString(_objSpot)[1]);
+        }
+        else {
+            objView.findViewById(R.id.row_opening_hours).setVisibility(View.GONE);
+        }
+
+        this.setCreateGradeOverlay(objView);
 
         return objView;
     }
@@ -74,9 +79,120 @@ public class FragmentSpotDetails extends Fragment {
                     objView.findViewById(R.id.iv_spot_grade_star5)
             };
 
-        for(int i = 0; i < arrIvStars.length; i++) {
+        arrIvStars[0].setImageResource(R.drawable.star_yellow);
+        for(int i = 1; i < arrIvStars.length; i++) {
             arrIvStars[i].setImageResource(i + 1 <= nGrade ? R.drawable.star_yellow : R.drawable.star_empty);
         }
+    }
+
+    private void setCreateGradeOverlay(final View objView) {
+        objView.findViewById(R.id.btn_create_grade).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final ImageView[] arrUserSpotGradeStars = new ImageView[]
+                {
+                    objView.findViewById(R.id.iv_spot_user_grade_star1),
+                    objView.findViewById(R.id.iv_spot_user_grade_star2),
+                    objView.findViewById(R.id.iv_spot_user_grade_star3),
+                    objView.findViewById(R.id.iv_spot_user_grade_star4),
+                    objView.findViewById(R.id.iv_spot_user_grade_star5)
+                };
+
+                for(int i = 0; i < _objSpot.UserGrade; i++) {
+                    arrUserSpotGradeStars[i].setImageResource(_objSpot.UserGrade >= (i + 1) ? R.drawable.star_yellow : R.drawable.star_empty);
+                }
+
+                objView.findViewById(R.id.rl_create_spot_grade).setVisibility(View.VISIBLE);
+                nSelectedUserGrade = -1;
+            }
+        });
+
+        objView.findViewById(R.id.btn_send_grade).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(nSelectedUserGrade == -1) {
+                    objView.findViewById(R.id.rl_create_spot_grade).setVisibility(View.GONE);
+                    return;
+                }
+
+                ((MainActivity)getActivity()).showHideProgressBar(true);
+                new AsyncTask<Void, Void, WebAPIManager.WebAPIReply>() {
+                    @Override
+                    protected WebAPIManager.WebAPIReply doInBackground(Void... voids) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        return new WebAPIManager().createSpotGrade(nSelectedUserGrade, _objSpot.SpotID);
+                    }
+
+                    @Override
+                    protected void onPostExecute(WebAPIManager.WebAPIReply objWebAPIReply) {
+                        if(objWebAPIReply != null && objWebAPIReply.isSuccess()) {
+                            _objSpot.UserGrade = nSelectedUserGrade;
+                        }
+                        ((MainActivity)getActivity()).showHideProgressBar(false);
+                        objView.findViewById(R.id.rl_create_spot_grade).setVisibility(View.GONE);
+                    }
+                }.execute();
+            }
+        });
+
+        objView.findViewById(R.id.btn_cancel_grade).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                objView.findViewById(R.id.rl_create_spot_grade).setVisibility(View.GONE);
+            }
+        });
+
+        final ImageView[] arrUserSpotGradeStars = new ImageView[]
+        {
+            objView.findViewById(R.id.iv_spot_user_grade_star1),
+            objView.findViewById(R.id.iv_spot_user_grade_star2),
+            objView.findViewById(R.id.iv_spot_user_grade_star3),
+            objView.findViewById(R.id.iv_spot_user_grade_star4),
+            objView.findViewById(R.id.iv_spot_user_grade_star5)
+        };
+
+        for(int i = 0; i < arrUserSpotGradeStars.length; i++) {
+            final int finalI = i;
+            arrUserSpotGradeStars[i].setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    nSelectedUserGrade = finalI + 1;
+                    for(int j = 0; j <= finalI; j++) {
+                        arrUserSpotGradeStars[j].setImageResource(R.drawable.star_yellow);
+                    }
+                    for(int j = finalI + 1; j < arrUserSpotGradeStars.length; j++) {
+                        arrUserSpotGradeStars[j].setImageResource(R.drawable.star_empty);
+                    }
+                }
+            });
+        }
+    }
+
+    private String[] buildOpeningHoursString(WebAPIManager.Spot objSpot) {
+        StringBuilder objStringBuilderText1 = new StringBuilder();
+        objStringBuilderText1.append(objSpot.OpeningHours_MondayFrom + "  -  " + objSpot.OpeningHours_MondayTo + '\n');
+        objStringBuilderText1.append(objSpot.OpeningHours_TuesdayFrom + "  -  " + objSpot.OpeningHours_TuesdayTo + '\n');
+        objStringBuilderText1.append(objSpot.OpeningHours_WednesdayFrom + "  -  " + objSpot.OpeningHours_WednesdayTo + '\n');
+        objStringBuilderText1.append(objSpot.OpeningHours_ThursdayFrom + "  -  " + objSpot.OpeningHours_ThursdayTo + '\n');
+        objStringBuilderText1.append(objSpot.OpeningHours_FridayFrom + "  -  " + objSpot.OpeningHours_FridayTo + '\n');
+        objStringBuilderText1.append(objSpot.OpeningHours_SaturdayFrom + "  -  " + objSpot.OpeningHours_SaturdayTo + '\n');
+        objStringBuilderText1.append(objSpot.OpeningHours_SundayFrom + "  -  " + objSpot.OpeningHours_SundayTo + '\n');
+
+        StringBuilder objStringBuilderText2 = new StringBuilder();
+        objStringBuilderText2.append("Poniedziałek:" + '\n');
+        objStringBuilderText2.append("Wtorek:" + '\n');
+        objStringBuilderText2.append("Środa:" + '\n');
+        objStringBuilderText2.append("Czwartek:" + '\n');
+        objStringBuilderText2.append("Piątek:" + '\n');
+        objStringBuilderText2.append("Sobota:" + '\n');
+        objStringBuilderText2.append("Niedziela:" + '\n');
+
+        return new String[] { objStringBuilderText2.toString(), objStringBuilderText1.toString() };
     }
 
     public static FragmentSpotDetails newInstance(WebAPIManager.Spot objSpot) {
