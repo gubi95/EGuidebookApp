@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class WebAPIManager {
-    private static final String strBaseURL = "192.168.1.5";
+    private static final String strBaseURL = "192.168.1.2";
     private final String INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
     private final int CODE_OK = 0;
     private final int CODE_INTERNAL_SERVER_ERROR = 1;

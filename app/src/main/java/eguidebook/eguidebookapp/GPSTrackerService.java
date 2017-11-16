@@ -128,7 +128,7 @@ public class GPSTrackerService extends Service implements LocationListener {
         return this._bCanGetLocation;
     }
 
-    public void showSettingsAlert(){
+    public void showSettingsAlert() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(_objContext);
 
         alertDialog.setTitle("Ustawienia GPS");
