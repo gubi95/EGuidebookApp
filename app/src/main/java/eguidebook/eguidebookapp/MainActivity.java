@@ -33,6 +33,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private FragmentSpotsByCategory _objFragmentSpotsByCategory = null;
+    private FragmentRouteList _objFragmentRouteList = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,89 +99,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+//        SearchView objSettingsMore = (SearchView) menu.findItem(R.id.settings_more).getActionView();
+//        objSettingsMore.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if(_objFragmentRouteList != null && _objFragmentRouteList.isVisible()) {
+//
+//                }
+//            }
+//        });
+
         return true;
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void loadHistory(String query) {
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-
-//            // Cursor
-//            String[] columns = new String[] { "_id", "text" };
-//            Object[] temp = new Object[] { 0, "default" };
-//
-//            MatrixCursor cursor = new MatrixCursor(columns);
-//
-//            for(int i = 0; i < items.size(); i++) {
-//
-//                temp[0] = i;
-//                temp[1] = items.get(i);replaced s with i as s not used anywhere.
-//
-//                        cursor.addRow(temp);
-//
-//            }
-//
-//            // SearchView
-//            SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-//
-//            final SearchView search = (SearchView) menu.findItem(R.id.search).getActionView();
-//
-//            search.setSuggestionsAdapter(new ExampleAdapter(this, cursor, items));
-
+    public void setTopBarTitle(String strTitle) {
+        try {
+            if(getSupportActionBar() != null) {
+                getSupportActionBar().setTitle(strTitle);
+            }
         }
-
+        catch (Exception ex) { }
     }
 
-    public class ExampleAdapter extends CursorAdapter {
-
-        private List<String> items;
-
-        private TextView text;
-
-        public ExampleAdapter(Context context, Cursor cursor, List<String> items) {
-
-            super(context, cursor, false);
-
-            this.items = items;
-
+    public void showHideSearchIcon(boolean bShow) {
+        try {
+            findViewById(R.id.search).setVisibility(bShow ? View.VISIBLE : View.GONE);
         }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-
-            text.setText(items.get(cursor.getPosition()));
-
-        }
-
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-            View view = inflater.inflate(R.layout.search_bar, parent, false);
-
-            text = (TextView) view.findViewById(R.id.text);
-
-            return view;
-
-        }
-
+        catch (Exception ex) { }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-
-
-        return super.onOptionsItemSelected(item);
+    public void showHide3DotVerticalIcon(boolean bShow) {
+        try {
+            findViewById(R.id.settings_more).setVisibility(bShow ? View.VISIBLE : View.GONE);
+        }
+        catch (Exception ex) { }
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        int id = item.getItemId();
         this.closeDrawer();
         return true;
     }
@@ -201,10 +158,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         MenuExpandListAdapter.ExpandableItem objExpandableItemCategories = new MenuExpandListAdapter.ExpandableItem("Miejsca", true, listExpandableItemChildCategories);
         MenuExpandListAdapter.ExpandableItem objExpandableItemAddSpot = new MenuExpandListAdapter.ExpandableItem("Zaproponuj miejsce", true, new ArrayList<MenuExpandListAdapter.ExpandableItemChild>());
+        MenuExpandListAdapter.ExpandableItem objExpandableItemRoutes = new MenuExpandListAdapter.ExpandableItem("Trasy", false, new ArrayList<MenuExpandListAdapter.ExpandableItemChild>());
         MenuExpandListAdapter.ExpandableItem objExpandableItemLogout = new MenuExpandListAdapter.ExpandableItem("Wyloguj", false, new ArrayList<MenuExpandListAdapter.ExpandableItemChild>());
 
         listExpandableItem.add(objExpandableItemCategories);
         listExpandableItem.add(objExpandableItemAddSpot);
+        listExpandableItem.add(objExpandableItemRoutes);
         listExpandableItem.add(objExpandableItemLogout);
     }
 
@@ -230,8 +189,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     objFragmentTransaction.commit();
                     closeDrawer();
                 }
-                // logout
+                // routes
                 else if(groupPosition == 2) {
+                    FragmentManager objFragmentManager = getSupportFragmentManager();
+                    FragmentTransaction objFragmentTransaction = objFragmentManager.beginTransaction();
+                    _objFragmentRouteList = FragmentRouteList.newInstance();
+                    objFragmentTransaction.replace(R.id.main_content, _objFragmentRouteList);
+                    objFragmentTransaction.commit();
+                    closeDrawer();
+                }
+                // logout
+                else if(groupPosition == 3) {
                     EGuidebookApplication.logout(new EGuidebookApplication.ILogoutSuccessCallback() {
                         @Override
                         public void doAction() {

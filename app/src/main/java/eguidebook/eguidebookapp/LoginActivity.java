@@ -95,7 +95,7 @@ public class LoginActivity extends AppCompatActivity {
 
                             switch(objLoginReply.Code) {
                                 case WebAPIManager.CODE_USER_ALREADY_EXISTS:
-                                    etLogin.setError("Podany użytwkonik już istnieje");
+                                    etLogin.setError("Podany użytkownik już istnieje");
                                     break;
                                 case WebAPIManager.CODE_INCORRECT_USERNAME:
                                     etLogin.setError("Adres e-mail jest nieprawidłowy");

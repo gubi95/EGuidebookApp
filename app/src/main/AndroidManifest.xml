@@ -46,6 +46,12 @@
             android:name=".CaptureSpotImageActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".ActivityRouteDetails"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar"/>
+
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyDAJ2cZ-S8vm4oQz0_tOB2f41FX_IWYU-k"/>
     </application>
 
 </manifest>

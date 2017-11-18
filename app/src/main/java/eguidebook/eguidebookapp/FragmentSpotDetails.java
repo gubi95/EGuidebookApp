@@ -42,11 +42,11 @@ public class FragmentSpotDetails extends Fragment {
 
         ((TextView) objView.findViewById(R.id.tv_spot_name)).setText(_objSpot.Name);
 
-        CollapseRowManager.setup(objView.findViewById(R.id.row_description), "Opis", CollapseRowManager.Type.TEXT);
+        CollapseRowManager.setup(objView.findViewById(R.id.row_description), "Opis", CollapseRowManager.Type.TEXT, null);
         CollapseRowManager.setText(objView.findViewById(R.id.row_description), _objSpot.Description);
 
         if(_objSpot.IsOpeningHoursDefined) {
-            CollapseRowManager.setup(objView.findViewById(R.id.row_opening_hours), "Godziny otwarcia", CollapseRowManager.Type.DOUBLE_TEXT);
+            CollapseRowManager.setup(objView.findViewById(R.id.row_opening_hours), "Godziny otwarcia", CollapseRowManager.Type.DOUBLE_TEXT, null);
             CollapseRowManager.setText(objView.findViewById(R.id.row_opening_hours), this.buildOpeningHoursString(_objSpot)[0], this.buildOpeningHoursString(_objSpot)[1]);
         }
         else {
@@ -54,6 +54,10 @@ public class FragmentSpotDetails extends Fragment {
         }
 
         this.setCreateGradeOverlay(objView);
+
+        ((MainActivity)getActivity()).setTopBarTitle(_objSpot.Name);
+        ((MainActivity)getActivity()).showHideSearchIcon(false);
+        ((MainActivity)getActivity()).showHide3DotVerticalIcon(false);
 
         return objView;
     }

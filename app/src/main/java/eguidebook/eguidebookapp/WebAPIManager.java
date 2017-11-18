@@ -5,10 +5,12 @@ import android.os.Parcelable;
 import android.util.Base64;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -369,4 +371,58 @@ public class WebAPIManager {
 
         return objWebAPIReply;
     }
+
+    public class Route implements Serializable {
+        public String RouteID;
+        public String Name;
+        public String Description;
+        public boolean IsSystemRoute;
+        public RouteSpot[] Spots;
+    }
+
+    public class RouteSpot implements Serializable {
+        public String SpotID;
+        public String Name;
+        public double CoorX;
+        public double CoorY;
+    }
+
+    public class GetAllRoutesReply extends WebAPIReply {
+        public Route[] Routes;
+    }
+
+    public GetAllRoutesReply getAllRoutes() {
+        GetAllRoutesReply objGetAllRoutesReply = null;
+
+        try {
+            objGetAllRoutesReply = new Gson().fromJson(this.downloadString(strBaseURL + "/api/Route/GetAll"), GetAllRoutesReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objGetAllRoutesReply == null) {
+            objGetAllRoutesReply = new GetAllRoutesReply();
+            objGetAllRoutesReply.Routes = new Route[] { };
+            objGetAllRoutesReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objGetAllRoutesReply.Message = this.INTERNAL_SERVER_ERROR;
+        }
+
+        return objGetAllRoutesReply;
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

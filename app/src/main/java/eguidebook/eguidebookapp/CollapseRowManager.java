@@ -12,7 +12,11 @@ public class CollapseRowManager {
         DOUBLE_TEXT
     }
 
-    public static void setup(final View objView, String strHeader, Type eType) {
+     public interface IOnRowClick {
+        void doAction();
+     }
+
+    public static void setup(final View objView, String strHeader, Type eType, final IOnRowClick objIOnRowClick) {
         ((TextView) objView.findViewById(R.id.tv_expand_collapse_row_header)).setText(strHeader);
         objView.findViewById(R.id.iv_expand_collapse_row).setTag(false);
 
@@ -41,6 +45,15 @@ public class CollapseRowManager {
                     ivExpandCollapse.setTag(!bIsExpanded);
                     objView.findViewById(R.id.tv_collapse_row_text_content_1).setVisibility(bIsExpanded ? View.GONE : View.VISIBLE);
                     objView.findViewById(R.id.tv_collapse_row_text_content_2).setVisibility(bIsExpanded ? View.GONE : View.VISIBLE);
+                }
+            });
+        }
+
+        if(objIOnRowClick != null) {
+            objView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    objIOnRowClick.doAction();
                 }
             });
         }

@@ -7,4 +7,11 @@
         android:title="Szukaj"
         app:showAsAction="ifRoom"
         app:actionViewClass="android.widget.SearchView" />
+    <item
+        android:id="@+id/settings_more"
+        android:title="Opcje"
+        android:orderInCategory="101"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_more_vert_black_24dp">
+    </item>
 </menu>

@@ -39,6 +39,10 @@ public class FragmentCreateSpot extends Fragment {
         this.setCreateNewSpotConfirmButton(objView);
         this.setCloseSpotConfirmationOverlayButton(objView);
 
+        ((MainActivity)getActivity()).setTopBarTitle("Nowe miejsce");
+        ((MainActivity)getActivity()).showHideSearchIcon(false);
+        ((MainActivity)getActivity()).showHide3DotVerticalIcon(false);
+
         return objView;
     }
 
