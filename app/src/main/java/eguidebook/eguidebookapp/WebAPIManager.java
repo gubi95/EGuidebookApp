@@ -408,6 +408,35 @@ public class WebAPIManager {
 
         return objGetAllRoutesReply;
     }
+
+    public class GoogleMapSpot {
+        public String SpotID;
+        public String Name;
+        public double CoorX;
+        public double CoorY;
+    }
+
+    public class GetForGoogleMapReply extends WebAPIReply {
+        public GoogleMapSpot[] Spots;
+    }
+
+    public GetForGoogleMapReply getForGoogleMap() {
+        GetForGoogleMapReply objGetForGoogleMapReply = null;
+
+        try {
+            objGetForGoogleMapReply = new Gson().fromJson(this.downloadString(strBaseURL + "/api/Spot/GetForGoogleMap"), GetForGoogleMapReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objGetForGoogleMapReply == null) {
+            objGetForGoogleMapReply = new GetForGoogleMapReply();
+            objGetForGoogleMapReply.Spots = new GoogleMapSpot[] { };
+            objGetForGoogleMapReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objGetForGoogleMapReply.Message = this.INTERNAL_SERVER_ERROR;
+        }
+
+        return objGetForGoogleMapReply;
+    }
 }
 
 

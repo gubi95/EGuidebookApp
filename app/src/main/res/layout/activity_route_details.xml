@@ -40,4 +40,20 @@
         android:src="@drawable/ic_edit_black_24dp"
         android:backgroundTint="#6EC2EF"/>
 
+    <RelativeLayout
+        android:id="@+id/progressBar"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#66FFFFFF"
+        android:gravity="center">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"/>
+
+    </RelativeLayout>
+
 </RelativeLayout>
