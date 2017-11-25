@@ -380,11 +380,18 @@ public class WebAPIManager {
         public RouteSpot[] Spots;
     }
 
-    public class RouteSpot implements Serializable {
+    public static class RouteSpot implements Serializable {
         public String SpotID;
         public String Name;
         public double CoorX;
         public double CoorY;
+
+        public RouteSpot(GoogleMapSpot objGoogleMapSpot) {
+            this.SpotID = objGoogleMapSpot.SpotID;
+            this.Name = objGoogleMapSpot.Name;
+            this.CoorX = objGoogleMapSpot.CoorX;
+            this.CoorY = objGoogleMapSpot.CoorY;
+        }
     }
 
     public class GetAllRoutesReply extends WebAPIReply {

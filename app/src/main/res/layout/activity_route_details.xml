@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -18,14 +18,78 @@
         android:layout_height="50dp"
         android:background="#88333333">
 
+        <ImageView
+            android:id="@+id/iv_route_details_view_list"
+            android:layout_width="40dp"
+            android:layout_height="50dp"
+            android:paddingLeft="6dp"
+            android:src="@drawable/ic_list_route_details_24dp" />
+
         <TextView
             android:id="@+id/tv_route_mode_name"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="match_parent"
             android:text="Tryb podglądu"
             android:textColor="#FFFFFF"
             android:gravity="center"
             android:textSize="30sp"/>
+
+        <ImageView
+            android:id="@+id/iv_route_details_search_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingRight="6dp"
+            android:src="@drawable/ic_search_route_details_24dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_route_search_panel"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="50dp"
+        android:orientation="horizontal"
+        android:background="#88333333">
+
+        <EditText
+            android:id="@+id/et_route_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:textColor="#EEEEEE"
+            android:textColorHint="#EEEEEE"
+            android:backgroundTint="#999999"
+            android:hint="Wpisz nazwę miejsca..."/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_route_spot_list_panel"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="50dp"
+        android:orientation="vertical"
+        android:background="#88333333"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_route_details_route_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@layout/activity_route_spot_list_item_template">
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
 
     </LinearLayout>
 

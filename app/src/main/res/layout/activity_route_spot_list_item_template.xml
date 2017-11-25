@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#00000000"
+    android:orientation="horizontal"
+    android:paddingBottom="5dp"
+    android:paddingTop="5dp">
+
+    <TextView
+        android:id="@+id/tv_route_activity_spot_list_item_template_spot_name"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:paddingLeft="15dp"
+        android:textSize="20sp"/>
+
+    <ImageView
+        android:id="@+id/iv_route_activity_spot_list_item_template_spot_delete"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:paddingRight="5dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_clear_route_details_activity_route_remove_black_24dp"/>
+
+</LinearLayout>

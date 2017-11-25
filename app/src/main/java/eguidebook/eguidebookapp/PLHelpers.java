@@ -2,8 +2,14 @@ package eguidebook.eguidebookapp;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+
+import com.google.gson.Gson;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,5 +48,20 @@ public class PLHelpers {
 
     public static byte[] getCreateSpotCurrentImage() {
         return _arrCreateSpotCurrentImage;
+    }
+
+    public static void hideKeyboard(FragmentActivity objFragmentActivity) {
+        try {
+            View objView = objFragmentActivity.getCurrentFocus();
+            if (objView != null) {
+                InputMethodManager objInputMethodManager = (InputMethodManager) objFragmentActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                objInputMethodManager.hideSoftInputFromWindow(objView.getWindowToken(), 0);
+            }
+        }
+        catch (Exception ex) { }
+    }
+
+    public static <T> T copyObject(T objectToCopy) {
+        return (T) new Gson().fromJson(new Gson().toJson(objectToCopy, objectToCopy.getClass()), objectToCopy.getClass());
     }
 }
