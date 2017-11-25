@@ -444,6 +444,71 @@ public class WebAPIManager {
 
         return objGetForGoogleMapReply;
     }
+
+    public static class CreateRoutePostData {
+        public String Name;
+        public String Description;
+        public String[] SpotIDs;
+
+        public CreateRoutePostData(String strName, String strDescription, String[] arrSpotIDs) {
+            this.Name = strName;
+            this.Description = strDescription;
+            this.SpotIDs = arrSpotIDs;
+        }
+    }
+
+    public class CreateRouteReply extends WebAPIReply {
+        public String RouteID;
+    }
+
+    public CreateRouteReply createRoute(CreateRoutePostData objCreateRoutePostData) {
+        CreateRouteReply objCreateRouteReply = null;
+
+        try {
+            objCreateRouteReply = new Gson().fromJson(this.uploadString(strBaseURL + "/api/Route/Create", new Gson().toJson(objCreateRoutePostData, CreateRoutePostData.class)), CreateRouteReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objCreateRouteReply == null) {
+            objCreateRouteReply = new CreateRouteReply();
+            objCreateRouteReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objCreateRouteReply.Message = this.INTERNAL_SERVER_ERROR;
+            objCreateRouteReply.RouteID = "";
+        }
+
+        return objCreateRouteReply;
+    }
+
+    public static class EditRoutePostData {
+        public String RouteID;
+        public String Name;
+        public String Description;
+        public String[] SpotIDs;
+
+        public EditRoutePostData(String strRouteID, String strName, String strDescription, String[] arrSpotIDs) {
+            this.RouteID = strRouteID;
+            this.Name = strName;
+            this.Description = strDescription;
+            this.SpotIDs = arrSpotIDs;
+        }
+    }
+
+    public WebAPIReply updateRoute(EditRoutePostData objEditRoutePostData) {
+        WebAPIReply objWebAPIReply = null;
+
+        try {
+            objWebAPIReply = new Gson().fromJson(this.uploadString(strBaseURL + "/api/Route/Edit", new Gson().toJson(objEditRoutePostData, EditRoutePostData.class)), WebAPIReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objWebAPIReply == null) {
+            objWebAPIReply = new WebAPIReply();
+            objWebAPIReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objWebAPIReply.Message = this.INTERNAL_SERVER_ERROR;
+        }
+
+        return objWebAPIReply;
+    }
 }
 
 

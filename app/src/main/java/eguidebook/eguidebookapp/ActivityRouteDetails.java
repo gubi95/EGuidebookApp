@@ -18,6 +18,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -73,8 +74,11 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         this.loadMap(EnumMode.VIEW);
     }
 
-    public void showHideProgressBar(boolean bShow) {
-        findViewById(R.id.progressBar).setVisibility(bShow ? View.VISIBLE : View.GONE);
+    private void showHideProgressBar(boolean bShow) {
+        try {
+            findViewById(R.id.progressBar).setVisibility(bShow ? View.VISIBLE : View.GONE);
+        }
+        catch (Exception ex) { }
     }
 
     private void loadRoute(GoogleMap objGoogleMap, WebAPIManager.Route objRoute, boolean bClearMap) {
@@ -161,8 +165,9 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                 if(_eMode == EnumMode.VIEW) {
                     _eMode = EnumMode.EDIT;
                 }
-                else {
+                else if(_eMode == EnumMode.EDIT) {
                     _eMode = EnumMode.VIEW;
+                    saveRoute(_objRoute);
                 }
 
                 loadMap(_eMode);
@@ -408,4 +413,70 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         }
     }
 
+    private boolean isRouteValid(WebAPIManager.Route objRoute, boolean bMakeToasts) {
+        if(PLHelpers.stringIsNullOrEmpty(objRoute.Name)) {
+            if(bMakeToasts) {
+                Toast.makeText(getApplicationContext(), "Proszę wpisać nazwę miejsca", Toast.LENGTH_LONG).show();
+            }
+            return false;
+        }
+
+        if(objRoute.Spots == null || objRoute.Spots.length < 2) {
+            if(bMakeToasts) {
+                Toast.makeText(getApplicationContext(), "Trasa musi zawierać conajmniej 2 miejsca", Toast.LENGTH_LONG).show();
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private void saveRoute(final WebAPIManager.Route objRoute) {
+        if(!this.isRouteValid(objRoute, true)) {
+            return;
+        }
+
+        if(this._bIsSearchBarVisible) {
+            this.hideSearchBar();
+        }
+
+        if (this._bIsSpotListVisible) {
+            this.hideSpotList();
+        }
+
+        this.showHideProgressBar(true);
+        new AsyncTask<Void, Void, WebAPIManager.WebAPIReply>() {
+            @Override
+            protected WebAPIManager.WebAPIReply doInBackground(Void... voids) {
+                try {
+                    ArrayList<String> listSpotIDs = new ArrayList<>();
+
+                    for (WebAPIManager.RouteSpot objRouteSpot : _objRoute.Spots) {
+                        listSpotIDs.add(objRouteSpot.SpotID);
+                    }
+
+                    String[] arrSpotIDs = listSpotIDs.toArray(new String[listSpotIDs.size()]);
+
+                    if (PLHelpers.stringIsNullOrEmpty(objRoute.RouteID)) {
+                        return new WebAPIManager().createRoute(new WebAPIManager.CreateRoutePostData(_objRoute.Name, _objRoute.Description, arrSpotIDs));
+                    } else {
+                        return new WebAPIManager().updateRoute(new WebAPIManager.EditRoutePostData(_objRoute.RouteID, _objRoute.Name, _objRoute.Description, arrSpotIDs));
+                    }
+                }
+                catch (Exception ex) { }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(WebAPIManager.WebAPIReply objWebAPIReply) {
+                if(objWebAPIReply != null && objWebAPIReply.isSuccess()) {
+                    if(objWebAPIReply instanceof WebAPIManager.CreateRouteReply) {
+                        _objRoute.RouteID = ((WebAPIManager.CreateRouteReply) objWebAPIReply).RouteID;
+                    }
+                }
+                showHideProgressBar(false);
+            }
+        }.execute();
+    }
 }

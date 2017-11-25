@@ -26,7 +26,7 @@ public class PLHelpers {
     }
 
     public static boolean stringIsNullOrEmpty(String strValue) {
-        return strValue == null || strValue.length() == 0;
+        return strValue == null || strValue.trim().length() == 0;
     }
 
     public static int DPtoPX(int nDP, Context context){
