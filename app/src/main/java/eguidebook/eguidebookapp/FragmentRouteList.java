@@ -1,5 +1,6 @@
 package eguidebook.eguidebookapp;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ public class FragmentRouteList extends Fragment {
         return objView;
     }
 
+    @SuppressLint("StaticFieldLeak")
     public void loadRoutes() {
         ((MainActivity) getActivity()).showHideProgressBar(true);
         new AsyncTask<Void, Void, WebAPIManager.GetAllRoutesReply>() {

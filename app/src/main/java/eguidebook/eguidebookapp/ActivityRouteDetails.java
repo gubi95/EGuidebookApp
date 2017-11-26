@@ -2,13 +2,17 @@ package eguidebook.eguidebookapp;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +28,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -40,6 +46,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     private WebAPIManager.Route _objRoute = null;
     private ArrayList<WebAPIManager.GoogleMapSpot> _listGoogleMapSpot = null;
     private HashMap<String, Marker> _dictSpotIDToMapMarker = null;
+    private ArrayList<Marker> _listMarkerSearched = null;
     private EnumMode _eMode = EnumMode.VIEW;
     private boolean _bIsSearchBarVisible = false;
     private boolean _bIsSpotListVisible = false;
@@ -61,10 +68,24 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         _objRoute = (WebAPIManager.Route) getIntent().getSerializableExtra("Route");
 
         _dictSpotIDToMapMarker = new HashMap<>();
+        _listMarkerSearched = new ArrayList<>();
 
         this.setViewSpotListButton();
         this.setSearchBarButton();
         this.setFloatingActionButtons();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(this._bIsSearchBarVisible) {
+            this.hideSearchBar();
+        }
+        else if(this._bIsSpotListVisible) {
+            this.hideSpotList();
+        }
+        else {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -167,7 +188,13 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                 }
                 else if(_eMode == EnumMode.EDIT) {
                     _eMode = EnumMode.VIEW;
-                    saveRoute(_objRoute);
+                    openRouteNameDialog(new IOnAcceptRouteName() {
+                        @Override
+                        public void doAction(String strRouteName) {
+                            _objRoute.Name = strRouteName;
+                            saveRoute(_objRoute);
+                        }
+                    });
                 }
 
                 loadMap(_eMode);
@@ -193,6 +220,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             @Override
             public boolean onEditorAction(TextView textView, int nActionID, KeyEvent keyEvent) {
                 if(nActionID == EditorInfo.IME_ACTION_SEARCH) {
+                    filterSpots(textView.getText().toString(), _objGoogleMap);
                     return true;
                 }
                 return false;
@@ -225,6 +253,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             objInputMethodManager.showSoftInput(etSearchSpot, InputMethodManager.SHOW_IMPLICIT);
         }
         catch (Exception ex) { }
+        this.unsearchMarkers(_listMarkerSearched);
     }
 
     private void hideSearchBar() {
@@ -233,6 +262,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         findViewById(R.id.ll_route_search_panel).setVisibility(View.GONE);
         ((EditText) findViewById(R.id.et_route_search)).setText("");
         findViewById(R.id.et_route_search).clearFocus();
+        this.unsearchMarkers(_listMarkerSearched);
     }
 
     private void showSpotList() {
@@ -351,10 +381,9 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
     private class SpotListRecyclerViewAdapter extends RecyclerView.Adapter<SpotListRecyclerViewAdapter.SpotViewHolder> {
         private ArrayList<String> _listSpotIDsToDelete = null;
-        private WebAPIManager.Route _objRoute = null;
+
 
         public SpotListRecyclerViewAdapter(WebAPIManager.Route objRoute) {
-            this._objRoute = PLHelpers.copyObject(objRoute);
             this._listSpotIDsToDelete = new ArrayList<>();
         }
 
@@ -384,7 +413,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
         @Override
         public void onBindViewHolder(final SpotViewHolder objSpotViewHolder, int position) {
-            final WebAPIManager.RouteSpot objRouteSpot = this._objRoute.Spots[position];
+            final WebAPIManager.RouteSpot objRouteSpot = _objRoute.Spots[position];
 
             objSpotViewHolder.getSpotNameTextView().setText(String.valueOf(position + 1) + ". " + objRouteSpot.Name);
 
@@ -396,11 +425,11 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                 objSpotViewHolder.getSpotDeleteImageView().setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        int nCurrentPosition = objSpotViewHolder.getAdapterPosition();
-                        _listSpotIDsToDelete.add(objRouteSpot.SpotID);
-                        ArrayList<WebAPIManager.RouteSpot> listRouteSpot = new ArrayList<>(Arrays.asList(_objRoute.Spots));
-                        listRouteSpot.remove(nCurrentPosition);
-                        _objRoute.Spots = listRouteSpot.toArray(new WebAPIManager.RouteSpot[listRouteSpot.size()]);
+                        int nPolylineIndex = getSpotPolylineIndex(objRouteSpot.CoorX, objRouteSpot.CoorY);
+                        if(nPolylineIndex != -1) {
+                            removeRouteSpotFromRoute(_objRoute, nPolylineIndex, objRouteSpot.SpotID);
+                        }
+
                         notifyDataSetChanged();
                     }
                 });
@@ -409,7 +438,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
         @Override
         public int getItemCount() {
-            return this._objRoute.Spots.length;
+            return _objRoute.Spots.length;
         }
     }
 
@@ -474,9 +503,89 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                     if(objWebAPIReply instanceof WebAPIManager.CreateRouteReply) {
                         _objRoute.RouteID = ((WebAPIManager.CreateRouteReply) objWebAPIReply).RouteID;
                     }
+
+                    Toast.makeText(getApplicationContext(), "Trasa została zapisana!", Toast.LENGTH_LONG).show();
                 }
                 showHideProgressBar(false);
             }
         }.execute();
+    }
+
+    private interface IOnAcceptRouteName {
+        void doAction(String strRouteName);
+    }
+
+    private void openRouteNameDialog(final IOnAcceptRouteName objIOnAcceptRouteName) {
+        AlertDialog.Builder objAlertDialogBuilder = new AlertDialog.Builder(this);
+
+        final EditText etRouteName = new EditText(getApplicationContext());
+        etRouteName.setText(_objRoute.Name);
+        objAlertDialogBuilder.setTitle("Nazwa trasy");
+        objAlertDialogBuilder.setView(etRouteName);
+
+        objAlertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) { }
+        });
+
+        objAlertDialogBuilder.setNegativeButton("Anuluj", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) { }
+        });
+
+        final AlertDialog objAlertDialog = objAlertDialogBuilder.show();
+
+        objAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String strRouteName = etRouteName.getText().toString();
+
+                if(PLHelpers.stringIsNullOrEmpty(strRouteName)) {
+                    Toast.makeText(getApplicationContext(), "Proszę wpisać nazwę miejsca", Toast.LENGTH_LONG).show();
+                }
+                else if(objIOnAcceptRouteName != null) {
+                    objAlertDialog.cancel();
+                    objIOnAcceptRouteName.doAction(strRouteName);
+                }
+            }
+        });
+    }
+
+    private void unsearchMarkers(ArrayList<Marker> listMarker) {
+        for(int i = 0; i < listMarker.size(); i++) {
+            listMarker.get(i).setIcon(BitmapDescriptorFactory.defaultMarker());
+        }
+        listMarker.clear();
+    }
+
+    private void filterSpots(String strName, GoogleMap objGoogleMap) {
+        this.unsearchMarkers(_listMarkerSearched);
+
+        String strNameFormatted = strName != null ? strName.toLowerCase().trim() : "";
+        BitmapDescriptor objBitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.search_google_map_pin);
+
+        boolean bFountAtLeastOne = false;
+        for (WebAPIManager.GoogleMapSpot objGoogleMapSpot : _listGoogleMapSpot) {
+            if(objGoogleMapSpot.Name.trim().toLowerCase().contains(strNameFormatted)) {
+                Marker objMarkerToSelect = this._dictSpotIDToMapMarker.get(objGoogleMapSpot.SpotID);
+                if(objMarkerToSelect != null) {
+                    objMarkerToSelect.setIcon(objBitmapDescriptor);
+
+                    if(!bFountAtLeastOne) {
+                        objGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(objGoogleMapSpot.CoorX, objGoogleMapSpot.CoorY)));
+                        objMarkerToSelect.showInfoWindow();
+                    }
+
+                    bFountAtLeastOne = true;
+
+                    _listMarkerSearched.add(objMarkerToSelect);
+                }
+            }
+        }
+
+        if(!bFountAtLeastOne) {
+            Toast.makeText(getApplicationContext(), "Brak miejsc o zadanych kryteriach", Toast.LENGTH_LONG).show();
+        }
+        else {
+            PLHelpers.hideKeyboard(this);
+        }
     }
 }
