@@ -15,6 +15,7 @@ import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
+import android.util.TypedValue;
 
 public class GPSTrackerService extends Service implements LocationListener {
     private final Context _objContext;
@@ -46,7 +47,7 @@ public class GPSTrackerService extends Service implements LocationListener {
         }
     }
 
-    public String getDistanceBetweendTwoPointsAsString(Location objLocation1, Location objLocation2) {
+    public String getDistanceBetweenTwoPointsAsString(Location objLocation1, Location objLocation2) {
         float fDistance = this.calculateDistanceBetweenTwoPoints(objLocation1, objLocation2);
         int nKilometers = (int) fDistance / 1000;
         int nMeters = (int) fDistance % 1000;
@@ -54,6 +55,19 @@ public class GPSTrackerService extends Service implements LocationListener {
     }
 
     public Location getLocation() {
+        if(_objContext.getResources().getBoolean(R.bool.isTestEnvironment)) {
+            TypedValue outValue = new TypedValue();
+            _objContext.getResources().getValue(R.dimen.defCoorX, outValue, true);
+            double defCoorX = outValue.getFloat();
+            _objContext.getResources().getValue(R.dimen.defCoorY, outValue, true);
+            double defCoorY = outValue.getFloat();
+            Location objLocation = new Location("dummy");
+            objLocation.setLatitude(defCoorX);
+            objLocation.setLongitude(defCoorY);
+            this._bCanGetLocation = true;
+            return objLocation;
+        }
+
         try {
             _objLocationManager = (LocationManager) _objContext.getSystemService(LOCATION_SERVICE);
             _bIsGPSEnabled = _objLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);

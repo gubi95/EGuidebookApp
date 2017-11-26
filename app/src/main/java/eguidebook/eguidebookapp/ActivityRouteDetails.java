@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -20,7 +21,9 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,6 +57,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
     private enum EnumMode {
         VIEW,
+        CREATE,
         EDIT,
         TRAVEL
     }
@@ -62,17 +66,38 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_details);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-        _objRoute = (WebAPIManager.Route) getIntent().getSerializableExtra("Route");
 
-        _dictSpotIDToMapMarker = new HashMap<>();
-        _listMarkerSearched = new ArrayList<>();
+        try {
+            this._objRoute = (WebAPIManager.Route) getIntent().getSerializableExtra("Route");
+        }
+        catch (Exception ex) {
+            _objRoute = null;
+        }
+
+        if(this._objRoute == null) {
+            this._objRoute = new WebAPIManager.Route();
+            this._objRoute.Spots = new WebAPIManager.RouteSpot[]{ };
+            this._objRoute.Name = "";
+            this._objRoute.Description = "";
+            this._objRoute.IsSystemRoute = false;
+            this._eMode = EnumMode.CREATE;
+        }
+        else {
+            this._eMode = EnumMode.VIEW;
+        }
+
+        findViewById(R.id.fab_delete_route).setVisibility(this._objRoute.IsSystemRoute ? View.GONE : View.VISIBLE);
+        findViewById(R.id.fab_edit_route).setVisibility(this._objRoute.IsSystemRoute ? View.GONE : View.VISIBLE);
+
+        this._dictSpotIDToMapMarker = new HashMap<>();
+        this._listMarkerSearched = new ArrayList<>();
 
         this.setViewSpotListButton();
         this.setSearchBarButton();
         this.setFloatingActionButtons();
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
@@ -92,7 +117,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     public void onMapReady(GoogleMap objGoogleMap) {
         _objGoogleMap = objGoogleMap;
         _objGoogleMap.setOnMarkerClickListener(this);
-        this.loadMap(EnumMode.VIEW);
+        this.loadMap(_eMode);
     }
 
     private void showHideProgressBar(boolean bShow) {
@@ -183,21 +208,44 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         findViewById(R.id.fab_edit_route).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                boolean bLoadMap = false;
+
                 if(_eMode == EnumMode.VIEW) {
                     _eMode = EnumMode.EDIT;
+                    bLoadMap = true;
                 }
-                else if(_eMode == EnumMode.EDIT) {
-                    _eMode = EnumMode.VIEW;
+                else if(_eMode == EnumMode.CREATE || _eMode == EnumMode.EDIT) {
                     openRouteNameDialog(new IOnAcceptRouteName() {
                         @Override
                         public void doAction(String strRouteName) {
                             _objRoute.Name = strRouteName;
-                            saveRoute(_objRoute);
+                            saveRoute(_objRoute, _eMode == EnumMode.CREATE, new ISaveRouteSuccessCallback() {
+                                @Override
+                                public void doAction() {
+                                    _eMode = EnumMode.VIEW;
+                                    loadMap(_eMode);
+                                }
+                            });
+
                         }
                     });
                 }
 
-                loadMap(_eMode);
+                if(bLoadMap) {
+                    loadMap(_eMode);
+                }
+            }
+        });
+
+        findViewById(R.id.fab_delete_route).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openDeleteRouteDialog(new IDeleteRouteAcceptCallback() {
+                    @Override
+                    public void doAction() {
+                        deleteRoute(_objRoute.RouteID);
+                    }
+                });
             }
         });
     }
@@ -269,13 +317,13 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         _bIsSpotListVisible = true;
         this.loadRouteSpotList();
         findViewById(R.id.ll_route_spot_list_panel).setVisibility(View.VISIBLE);
-        findViewById(R.id.fab_edit_route).setVisibility(_eMode == EnumMode.VIEW ? View.GONE : View.VISIBLE);
+        findViewById(R.id.fab_edit_route).setVisibility(_eMode == EnumMode.VIEW || _objRoute.IsSystemRoute ? View.GONE : View.VISIBLE);
     }
 
     private void hideSpotList() {
         _bIsSpotListVisible = false;
         findViewById(R.id.ll_route_spot_list_panel).setVisibility(View.GONE);
-        findViewById(R.id.fab_edit_route).setVisibility(View.VISIBLE);
+        findViewById(R.id.fab_edit_route).setVisibility(_objRoute.IsSystemRoute ? View.GONE : View.VISIBLE);
     }
 
     public void loadMap(EnumMode eMode) {
@@ -285,6 +333,15 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             findViewById(R.id.iv_route_details_search_icon).setVisibility(View.GONE);
             ((FloatingActionButton) findViewById(R.id.fab_edit_route)).setImageResource(R.drawable.ic_edit_black_24dp);
             this.loadRoute(_objGoogleMap, _objRoute, true);
+        }
+        else if(eMode == EnumMode.CREATE) {
+            ((TextView) findViewById(R.id.tv_route_mode_name)).setText("Nowa trasa");
+            findViewById(R.id.iv_route_details_search_icon).setVisibility(View.VISIBLE);
+            ((FloatingActionButton) findViewById(R.id.fab_edit_route)).setImageResource(R.drawable.ic_check_black_24dp);
+            this.loadMapForEditMode();
+            Location objCurrentLocation = EGuidebookApplication.mGPSTrackerService.getLocation();
+            _objGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(objCurrentLocation.getLatitude(), objCurrentLocation.getLongitude())));
+
         }
         else if(eMode == EnumMode.EDIT) {
             ((TextView) findViewById(R.id.tv_route_mode_name)).setText("Edycja");
@@ -327,7 +384,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
     @Override
     public boolean onMarkerClick(Marker objMarker) {
-        if(_eMode == EnumMode.EDIT) {
+        if(_eMode == EnumMode.CREATE || _eMode == EnumMode.EDIT) {
             for (Map.Entry<String, Marker> objMapEntry : this._dictSpotIDToMapMarker.entrySet()) {
                 if (objMapEntry.getValue().equals(objMarker)) {
                     String strSpotID = objMapEntry.getKey();
@@ -460,8 +517,12 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         return true;
     }
 
+    private interface ISaveRouteSuccessCallback {
+        void doAction();
+    }
+
     @SuppressLint("StaticFieldLeak")
-    private void saveRoute(final WebAPIManager.Route objRoute) {
+    private void saveRoute(final WebAPIManager.Route objRoute, final boolean bCreateNewRoute, final ISaveRouteSuccessCallback objISaveRouteSuccessCallback) {
         if(!this.isRouteValid(objRoute, true)) {
             return;
         }
@@ -479,6 +540,11 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             @Override
             protected WebAPIManager.WebAPIReply doInBackground(Void... voids) {
                 try {
+                    Thread.sleep(1000);
+                }
+                catch (InterruptedException e) { }
+
+                try {
                     ArrayList<String> listSpotIDs = new ArrayList<>();
 
                     for (WebAPIManager.RouteSpot objRouteSpot : _objRoute.Spots) {
@@ -487,7 +553,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
                     String[] arrSpotIDs = listSpotIDs.toArray(new String[listSpotIDs.size()]);
 
-                    if (PLHelpers.stringIsNullOrEmpty(objRoute.RouteID)) {
+                    if (bCreateNewRoute) {
                         return new WebAPIManager().createRoute(new WebAPIManager.CreateRoutePostData(_objRoute.Name, _objRoute.Description, arrSpotIDs));
                     } else {
                         return new WebAPIManager().updateRoute(new WebAPIManager.EditRoutePostData(_objRoute.RouteID, _objRoute.Name, _objRoute.Description, arrSpotIDs));
@@ -505,6 +571,10 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                     }
 
                     Toast.makeText(getApplicationContext(), "Trasa została zapisana!", Toast.LENGTH_LONG).show();
+
+                    if(objISaveRouteSuccessCallback != null) {
+                        objISaveRouteSuccessCallback.doAction();
+                    }
                 }
                 showHideProgressBar(false);
             }
@@ -520,8 +590,17 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
         final EditText etRouteName = new EditText(getApplicationContext());
         etRouteName.setText(_objRoute.Name);
+        etRouteName.setSingleLine();
+
+        FrameLayout objFrameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams objLayoutParams = new  FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        objLayoutParams.leftMargin = PLHelpers.DPtoPX(20, getApplicationContext());
+        objLayoutParams.rightMargin = PLHelpers.DPtoPX(20, getApplicationContext());
+        etRouteName.setLayoutParams(objLayoutParams);
+        objFrameLayout.addView(etRouteName);
+
         objAlertDialogBuilder.setTitle("Nazwa trasy");
-        objAlertDialogBuilder.setView(etRouteName);
+        objAlertDialogBuilder.setView(objFrameLayout);
 
         objAlertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) { }
@@ -587,5 +666,60 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         else {
             PLHelpers.hideKeyboard(this);
         }
+    }
+
+    private interface IDeleteRouteAcceptCallback {
+        void doAction();
+    }
+
+    private void openDeleteRouteDialog(final IDeleteRouteAcceptCallback objIDeleteRouteAcceptCallback) {
+        new AlertDialog.Builder(this)
+            .setMessage("Czy na pewno chcesz usunąć trasę?")
+            .setPositiveButton("Tak", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    if (objIDeleteRouteAcceptCallback != null) {
+                        objIDeleteRouteAcceptCallback.doAction();
+                    }
+                }
+            })
+            .setNegativeButton("Nie", null)
+            .show();
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private void deleteRoute(final String strRouteID) {
+        this.showHideProgressBar(true);
+
+        if(this._bIsSearchBarVisible) {
+            this.hideSearchBar();
+        }
+
+        if(this._bIsSpotListVisible) {
+            this.hideSpotList();
+        }
+
+        new AsyncTask<Void, Void, WebAPIManager.WebAPIReply>() {
+            @Override
+            protected WebAPIManager.WebAPIReply doInBackground(Void... voids) {
+                try {
+                    return new WebAPIManager().deleteRoute(strRouteID);
+                }
+                catch (Exception ex) {
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(WebAPIManager.WebAPIReply objWebAPIReply) {
+                showHideProgressBar(false);
+                if(objWebAPIReply != null && objWebAPIReply.isSuccess()) {
+                    onBackPressed();
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), "Wystąpił błąd podczas usuwanie trasy. Proszę spróbować ponownie", Toast.LENGTH_LONG).show();
+                }
+            }
+        }.execute();
     }
 }

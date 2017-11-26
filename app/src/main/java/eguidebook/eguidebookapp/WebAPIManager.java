@@ -372,7 +372,7 @@ public class WebAPIManager {
         return objWebAPIReply;
     }
 
-    public class Route implements Serializable {
+    public static class Route implements Serializable {
         public String RouteID;
         public String Name;
         public String Description;
@@ -498,6 +498,31 @@ public class WebAPIManager {
 
         try {
             objWebAPIReply = new Gson().fromJson(this.uploadString(strBaseURL + "/api/Route/Edit", new Gson().toJson(objEditRoutePostData, EditRoutePostData.class)), WebAPIReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objWebAPIReply == null) {
+            objWebAPIReply = new WebAPIReply();
+            objWebAPIReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objWebAPIReply.Message = this.INTERNAL_SERVER_ERROR;
+        }
+
+        return objWebAPIReply;
+    }
+
+    private class DeleteRoutePostData {
+        public String RouteID;
+
+        public DeleteRoutePostData(String strRouteID) {
+            this.RouteID = strRouteID;
+        }
+    }
+
+    public WebAPIReply deleteRoute(String strRouteID) {
+        WebAPIReply objWebAPIReply = null;
+
+        try {
+            objWebAPIReply = new Gson().fromJson(this.uploadString(strBaseURL + "/api/Route/Delete", new Gson().toJson(new DeleteRoutePostData(strRouteID), DeleteRoutePostData.class)), WebAPIReply.class);
         }
         catch (Exception ex) { }
 

@@ -1,5 +1,6 @@
 package eguidebook.eguidebookapp;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -39,6 +40,7 @@ public class LoginActivity extends AppCompatActivity {
         final Activity objActivityCurrent = this;
 
         findViewById(R.id.btn_login).setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("StaticFieldLeak")
             @Override
             public void onClick(View view) {
                 EGuidebookApplication.mGPSTrackerService = new GPSTrackerService(objActivityCurrent);
@@ -46,12 +48,12 @@ public class LoginActivity extends AppCompatActivity {
                     return;
                 }
 
-                final EditText etLogin = (EditText) findViewById(R.id.te_login);
-                final EditText etPassword = (EditText) findViewById(R.id.te_password);
+                final EditText etLogin = findViewById(R.id.te_login);
+                final EditText etPassword = findViewById(R.id.te_password);
 
-                if(!_bIsRegisterMode) {
-                    etLogin.setText("happywitcher@gmail.com");
-                    etPassword.setText("aB34567!");
+                if(getResources().getBoolean(R.bool.isTestEnvironment)) {
+                    etLogin.setText(getString(R.string.defUsername));
+                    etPassword.setText(getString(R.string.defPassword));
                 }
 
                 final String strUsername = etLogin.getText().toString();

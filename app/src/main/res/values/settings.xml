@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="isTestEnvironment">true</bool>
+    <item name="defCoorX" format="float" type="dimen">51.1104465</item>
+    <item name="defCoorY" format="float" type="dimen">17.0336996</item>
+    <string name="defUsername">happywitcher@gmail.com</string>
+    <string name="defPassword">aB34567!</string>
+</resources>

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -30,6 +31,7 @@ public class FragmentRouteList extends Fragment {
         ((MainActivity)getActivity()).showHideSearchIcon(false);
         ((MainActivity)getActivity()).showHide3DotVerticalIcon(true);
 
+        this.setNewRouteButton(objView);
         this.loadRoutes();
 
         return objView;
@@ -109,6 +111,17 @@ public class FragmentRouteList extends Fragment {
                 this._objViewCollapseRow = itemView.findViewById(R.id.collapse_row_route);
             }
         }
+    }
+
+    private void setNewRouteButton(View objView) {
+        FloatingActionButton objFloatingActionButton = objView.findViewById(R.id.fab_new_route);
+
+        objFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getContext(), ActivityRouteDetails.class));
+            }
+        });
     }
 
     public static FragmentRouteList newInstance() {

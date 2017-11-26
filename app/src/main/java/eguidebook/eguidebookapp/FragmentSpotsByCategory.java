@@ -3,7 +3,6 @@ package eguidebook.eguidebookapp;
 import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
-import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -94,7 +93,7 @@ public class FragmentSpotsByCategory extends Fragment {
                 }
             });
 
-            ((TextView)row.findViewById(R.id.tv_spot_distance)).setText(EGuidebookApplication.mGPSTrackerService.getDistanceBetweendTwoPointsAsString(objLocationUser, objLocationSpot));
+            ((TextView)row.findViewById(R.id.tv_spot_distance)).setText(EGuidebookApplication.mGPSTrackerService.getDistanceBetweenTwoPointsAsString(objLocationUser, objLocationSpot));
             return row;
         }
     }
