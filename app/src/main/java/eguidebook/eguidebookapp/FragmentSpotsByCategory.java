@@ -142,7 +142,7 @@ public class FragmentSpotsByCategory extends Fragment {
 
         new GetSpotsAsyncTask(getArguments().getString("SpotCategoryID")).execute();
 
-        ((MainActivity)getActivity()).setTopBarTitle("");
+        ((MainActivity)getActivity()).setTopBarTitle("Miejsca");
         ((MainActivity)getActivity()).showHideSearchIcon(true);
         ((MainActivity)getActivity()).showHide3DotVerticalIcon(false);
 

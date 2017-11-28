@@ -12,6 +12,9 @@ public class EGuidebookApplication {
 
     public static GPSTrackerService mGPSTrackerService = null;
 
+    public static int mLastSetTemperature = 0;
+    public static String mLastSetCityName = "---";
+
     public interface ILogoutSuccessCallback {
         void doAction();
     }

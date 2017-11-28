@@ -29,7 +29,7 @@ public class FragmentRouteList extends Fragment {
 
         ((MainActivity)getActivity()).setTopBarTitle("Trasy");
         ((MainActivity)getActivity()).showHideSearchIcon(false);
-        ((MainActivity)getActivity()).showHide3DotVerticalIcon(true);
+        ((MainActivity)getActivity()).showHide3DotVerticalIcon(false);
 
         this.setNewRouteButton(objView);
         this.loadRoutes();

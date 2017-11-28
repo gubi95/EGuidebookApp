@@ -29,7 +29,7 @@ public class WebAPIManager {
         return "http://" + strBaseURL;
     }
 
-    private String downloadString(String strURL) {
+    public String downloadString(String strURL) {
         try {
             URL myURL = new URL("http://" + strURL);
             HttpURLConnection myURLConnection = (HttpURLConnection) myURL.openConnection();
