@@ -314,6 +314,27 @@ public class WebAPIManager {
         return objGetSpotsByReply;
     }
 
+    public class GetSpotBySpotIDReply extends WebAPIReply {
+        public Spot Spot;
+    }
+
+    public GetSpotBySpotIDReply getSpotBySpotID(String strSpotID) {
+        GetSpotBySpotIDReply objGetSpotBySpotIDReply = null;
+
+        try {
+            objGetSpotBySpotIDReply = new Gson().fromJson(this.downloadString(strBaseURL + "/api/Spot/GetBySpotID?SpotID=" + strSpotID), GetSpotBySpotIDReply.class);
+        }
+        catch (Exception ex) { }
+
+        if(objGetSpotBySpotIDReply == null) {
+            objGetSpotBySpotIDReply = new GetSpotBySpotIDReply();
+            objGetSpotBySpotIDReply.Code = this.CODE_INTERNAL_SERVER_ERROR;
+            objGetSpotBySpotIDReply.Message = this.INTERNAL_SERVER_ERROR;
+        }
+
+        return objGetSpotBySpotIDReply;
+    }
+
     private class CreateGradePostData {
         public String SpotID;
         public int Grade;

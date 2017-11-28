@@ -1,5 +1,6 @@
 package eguidebook.eguidebookapp;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -55,9 +56,11 @@ public class FragmentSpotDetails extends Fragment {
 
         this.setCreateGradeOverlay(objView);
 
-        ((MainActivity)getActivity()).setTopBarTitle(_objSpot.Name);
-        ((MainActivity)getActivity()).showHideSearchIcon(false);
-        ((MainActivity)getActivity()).showHide3DotVerticalIcon(false);
+        if(getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).setTopBarTitle(_objSpot.Name);
+            ((MainActivity) getActivity()).showHideSearchIcon(false);
+            ((MainActivity) getActivity()).showHide3DotVerticalIcon(false);
+        }
 
         return objView;
     }
@@ -112,6 +115,7 @@ public class FragmentSpotDetails extends Fragment {
         });
 
         objView.findViewById(R.id.btn_send_grade).setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("StaticFieldLeak")
             @Override
             public void onClick(View view) {
                 if(nSelectedUserGrade == -1) {
@@ -119,7 +123,13 @@ public class FragmentSpotDetails extends Fragment {
                     return;
                 }
 
-                ((MainActivity)getActivity()).showHideProgressBar(true);
+                if(getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).showHideProgressBar(true);
+                }
+                else {
+                    ((ActivityRouteDetails) getActivity()).showHideProgressBar(true);
+                }
+
                 new AsyncTask<Void, Void, WebAPIManager.WebAPIReply>() {
                     @Override
                     protected WebAPIManager.WebAPIReply doInBackground(Void... voids) {
@@ -137,7 +147,12 @@ public class FragmentSpotDetails extends Fragment {
                         if(objWebAPIReply != null && objWebAPIReply.isSuccess()) {
                             _objSpot.UserGrade = nSelectedUserGrade;
                         }
-                        ((MainActivity)getActivity()).showHideProgressBar(false);
+                        if(getActivity() instanceof MainActivity) {
+                            ((MainActivity) getActivity()).showHideProgressBar(false);
+                        }
+                        else {
+                            ((ActivityRouteDetails) getActivity()).showHideProgressBar(false);
+                        }
                         objView.findViewById(R.id.rl_create_spot_grade).setVisibility(View.GONE);
                     }
                 }.execute();

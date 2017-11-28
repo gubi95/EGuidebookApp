@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -46,6 +48,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import mehdi.sakout.fancybuttons.FancyButton;
+
 public class ActivityRouteDetails extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private GoogleMap _objGoogleMap;
     private WebAPIManager.Route _objRoute = null;
@@ -59,6 +63,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     private Polyline _objPolylineTravelToNextPoint = null;
     private Handler _objHandlerTravelling = null;
     private Marker _objMarkerCurrentLocation = null;
+    private FragmentSpotDetails _objFragmentSpotDetails = null;
 
     private enum EnumMode {
         VIEW,
@@ -113,6 +118,12 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         else if(this._bIsSpotListVisible) {
             this.hideSpotList();
         }
+        else if(this._objFragmentSpotDetails != null && this._objFragmentSpotDetails.isVisible()) {
+            findViewById(R.id.main_content).setVisibility(View.GONE);
+            findViewById(R.id.fab_delete_route).setVisibility(View.VISIBLE);
+            findViewById(R.id.fab_start_travel).setVisibility(View.VISIBLE);
+            this._bIsTravellingPaused = false;
+        }
         else {
             super.onBackPressed();
         }
@@ -125,7 +136,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         this.loadMap(_eMode);
     }
 
-    private void showHideProgressBar(boolean bShow) {
+    public void showHideProgressBar(boolean bShow) {
         try {
             findViewById(R.id.progressBar).setVisibility(bShow ? View.VISIBLE : View.GONE);
         }
@@ -259,6 +270,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             public void onClick(View view) {
                 if(_eMode == EnumMode.TRAVEL) {
                     _eMode = EnumMode.VIEW;
+                    stopTravelling();
                 }
                 else {
                     _eMode = EnumMode.TRAVEL;
@@ -347,6 +359,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     public void loadMap(EnumMode eMode) {
         this.hideSearchBar();
         findViewById(R.id.fab_edit_route).setEnabled(true);
+        ((FloatingActionButton) findViewById(R.id.fab_start_travel)).setImageResource(R.drawable.ic_directions_run_black_24dp);
         if(eMode == EnumMode.VIEW) {
             ((TextView) findViewById(R.id.tv_route_mode_name)).setText("Podgląd");
             findViewById(R.id.iv_route_details_search_icon).setVisibility(View.GONE);
@@ -371,6 +384,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         else if(eMode == EnumMode.TRAVEL) {
             ((TextView)findViewById(R.id.tv_route_mode_name)).setText("Zwiedzanie");
             findViewById(R.id.iv_route_details_search_icon).setVisibility(View.GONE);
+            ((FloatingActionButton) findViewById(R.id.fab_start_travel)).setImageResource(R.drawable.ic_location_disabled_black_24dp);
             findViewById(R.id.fab_edit_route).setEnabled(false);
             startTraveling();
         }
@@ -794,7 +808,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     };
 
     private int _nNextPointToTravelIndex = 0;
-    private int _nIntervalValue = 1000 * 10;
+    private final int _nIntervalValue = 1000 * 1;
     private boolean _bIsFirstTravelLoad = true;
     private boolean _bIsTravellingPaused = false;
 
@@ -805,8 +819,9 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         _objHandlerTravelling.postDelayed(new Runnable() {
             @Override
             public void run() {
+                Log.i("index", "Run!!!");
                 if(_bIsTravellingPaused) {
-                    _objHandlerTravelling.postDelayed(this, _nIntervalValue);
+                    _objHandlerTravelling.postDelayed(this, 1000);
                 }
                 else {
                     Location objLocationCurrent = new Location("dummy");
@@ -824,6 +839,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
                     if (objRouteSpotFound != null) {
                         _bIsTravellingPaused = true;
+                        showSpotNotificationOverlay(objRouteSpotFound);
                     }
 
                     MarkerOptions objMarkerOptions = new MarkerOptions();
@@ -854,7 +870,6 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     private void stopTravelling() {
         _nSimulationPointIndex = 0;
         _nNextPointToTravelIndex = 0;
-        _nIntervalValue = 1;
         _bIsTravellingPaused = false;
 
         if(_objMarkerCurrentLocation != null) {
@@ -862,9 +877,68 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
         }
         _objMarkerCurrentLocation = null;
 
+        if(_objPolylineTravelToNextPoint != null) {
+            _objPolylineTravelToNextPoint.remove();
+        }
+        _objPolylineTravelToNextPoint = null;
+
         _bIsFirstTravelLoad = true;
         if(_objHandlerTravelling != null) {
             _objHandlerTravelling.removeCallbacksAndMessages(null);
         }
+    }
+
+    private void showSpotNotificationOverlay(final WebAPIManager.RouteSpot objRouteSpot) {
+        ((FancyButton) findViewById(R.id.btn_go_to_spot_details)).setIconResource(R.drawable.ic_create_black_24dp);
+        ((FancyButton) findViewById(R.id.btn_continue_travel)).setIconResource(R.drawable.ic_directions_run_black_24dp);
+        ((TextView) findViewById(R.id.tv_spot_notification_name)).setText("Jesteś w pobliżu:\n" + objRouteSpot.Name);
+        findViewById(R.id.btn_go_to_spot_details).setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("StaticFieldLeak")
+            @Override
+            public void onClick(View view) {
+                findViewById(R.id.spot_notification_overlay).setVisibility(View.GONE);
+                findViewById(R.id.fab_delete_route).setVisibility(View.VISIBLE);
+                findViewById(R.id.fab_start_travel).setVisibility(View.VISIBLE);
+
+                showHideProgressBar(true);
+                new AsyncTask<Void, Void, WebAPIManager.GetSpotBySpotIDReply>() {
+                    @Override
+                    protected WebAPIManager.GetSpotBySpotIDReply doInBackground(Void... voids) {
+                        return new WebAPIManager().getSpotBySpotID(objRouteSpot.SpotID);
+                    }
+
+                    @Override
+                    protected void onPostExecute(WebAPIManager.GetSpotBySpotIDReply objGetSpotBySpotIDReply) {
+                        if(objGetSpotBySpotIDReply != null && objGetSpotBySpotIDReply.isSuccess()) {
+                            FragmentManager objFragmentManager = getSupportFragmentManager();
+                            FragmentTransaction objFragmentTransaction = objFragmentManager.beginTransaction();
+                            _objFragmentSpotDetails = FragmentSpotDetails.newInstance(objGetSpotBySpotIDReply.Spot);
+                            objFragmentTransaction.replace(R.id.main_content, _objFragmentSpotDetails).addToBackStack(null);
+                            objFragmentTransaction.commit();
+                            findViewById(R.id.fab_delete_route).setVisibility(View.GONE);
+                            findViewById(R.id.fab_start_travel).setVisibility(View.GONE);
+                            findViewById(R.id.main_content).setVisibility(View.VISIBLE);
+                        }
+                        showHideProgressBar(false);
+                    }
+                }.execute();
+            }
+        });
+
+        findViewById(R.id.btn_continue_travel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                findViewById(R.id.spot_notification_overlay).setVisibility(View.GONE);
+                findViewById(R.id.fab_delete_route).setVisibility(View.VISIBLE);
+                findViewById(R.id.fab_start_travel).setVisibility(View.VISIBLE);
+                _bIsTravellingPaused = false;
+                _nNextPointToTravelIndex++;
+            }
+        });
+
+        findViewById(R.id.fab_delete_route).setVisibility(View.GONE);
+        findViewById(R.id.fab_start_travel).setVisibility(View.GONE);
+
+        findViewById(R.id.spot_notification_overlay).setVisibility(View.VISIBLE);
     }
 }
