@@ -115,6 +115,17 @@
         android:src="@drawable/ic_edit_black_24dp"
         android:backgroundTint="#6EC2EF"/>
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_start_travel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="75dp"
+        android:src="@drawable/ic_directions_run_black_24dp"
+        android:backgroundTint="#6EC2EF"/>
+
     <RelativeLayout
         android:id="@+id/progressBar"
         android:visibility="gone"
@@ -128,6 +139,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:visibility="gone">
+
+
 
     </RelativeLayout>
 

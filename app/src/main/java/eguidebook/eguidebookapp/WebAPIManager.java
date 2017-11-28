@@ -31,7 +31,7 @@ public class WebAPIManager {
 
     public String downloadString(String strURL) {
         try {
-            URL myURL = new URL("http://" + strURL);
+            URL myURL = new URL((strURL.toLowerCase().startsWith("http") ? "" : "http://") + strURL);
             HttpURLConnection myURLConnection = (HttpURLConnection) myURL.openConnection();
             String userCredentials = EGuidebookApplication.mUsername + ":" + EGuidebookApplication.mPassword;
             String basicAuth = "Basic " + new String(Base64.encode(userCredentials.getBytes(), Base64.DEFAULT));

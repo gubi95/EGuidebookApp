@@ -3,17 +3,17 @@ package eguidebook.eguidebookapp;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +23,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +42,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ActivityRouteDetails extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private GoogleMap _objGoogleMap;
@@ -54,6 +56,9 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
     private boolean _bIsSearchBarVisible = false;
     private boolean _bIsSpotListVisible = false;
     private Polyline _objPolyline = null;
+    private Polyline _objPolylineTravelToNextPoint = null;
+    private Handler _objHandlerTravelling = null;
+    private Marker _objMarkerCurrentLocation = null;
 
     private enum EnumMode {
         VIEW,
@@ -248,6 +253,19 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                 });
             }
         });
+
+        findViewById(R.id.fab_start_travel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(_eMode == EnumMode.TRAVEL) {
+                    _eMode = EnumMode.VIEW;
+                }
+                else {
+                    _eMode = EnumMode.TRAVEL;
+                }
+                loadMap(_eMode);
+            }
+        });
     }
 
     private void setSearchBarButton() {
@@ -328,6 +346,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
 
     public void loadMap(EnumMode eMode) {
         this.hideSearchBar();
+        findViewById(R.id.fab_edit_route).setEnabled(true);
         if(eMode == EnumMode.VIEW) {
             ((TextView) findViewById(R.id.tv_route_mode_name)).setText("Podgląd");
             findViewById(R.id.iv_route_details_search_icon).setVisibility(View.GONE);
@@ -349,8 +368,11 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             ((FloatingActionButton) findViewById(R.id.fab_edit_route)).setImageResource(R.drawable.ic_check_black_24dp);
             this.loadMapForEditMode();
         }
-        else {
+        else if(eMode == EnumMode.TRAVEL) {
             ((TextView)findViewById(R.id.tv_route_mode_name)).setText("Zwiedzanie");
+            findViewById(R.id.iv_route_details_search_icon).setVisibility(View.GONE);
+            findViewById(R.id.fab_edit_route).setEnabled(false);
+            startTraveling();
         }
     }
 
@@ -721,5 +743,128 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                 }
             }
         }.execute();
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private void setNewTravelPointToPolyline(final GoogleMap objGoogleMap, final double dCoorXFrom, final double dCoorYFrom, final double dCoorXTo, final double dCoorYTo, boolean bShowProgress) {
+        this.showHideProgressBar(true);
+        new AsyncTask<Void, Void, ArrayList<GoogleMapsManager.Step>>() {
+            @Override
+            protected ArrayList<GoogleMapsManager.Step> doInBackground(Void... voids) {
+                return GoogleMapsManager.getDirectionsToPoint(dCoorXFrom, dCoorYFrom, dCoorXTo, dCoorYTo);
+            }
+
+            @Override
+            protected void onPostExecute(ArrayList<GoogleMapsManager.Step> listStep) {
+                if(_objPolylineTravelToNextPoint != null) {
+                    _objPolylineTravelToNextPoint.remove();
+                }
+
+                PolylineOptions objPolylineOptions = new PolylineOptions();
+                objPolylineOptions.color(Color.BLUE);
+
+                objPolylineOptions.add(new LatLng(dCoorXFrom, dCoorYFrom));
+
+                for(GoogleMapsManager.Step objStep : listStep) {
+                    objPolylineOptions.add(new LatLng(objStep.end_location.lat, objStep.end_location.lng));
+                }
+
+                _objPolylineTravelToNextPoint = objGoogleMap.addPolyline(objPolylineOptions);
+
+                showHideProgressBar(false);
+            }
+        }.execute();
+
+
+        if(_objPolylineTravelToNextPoint != null) {
+            _objPolylineTravelToNextPoint.remove();
+        }
+    }
+
+    int _nSimulationPointIndex = 0;
+    private LatLng[] _arrSimulationPoints = new LatLng[] {
+        new LatLng(51.1182515, 17.0678470),
+        new LatLng(51.1177624, 17.0608020),
+        new LatLng(51.1151412, 17.0588785),
+        new LatLng(51.1133966, 17.0594375),
+        new LatLng(51.1127200, 17.0606494),
+        new LatLng(51.1094937, 17.0503735),
+        new LatLng(51.1084583, 17.0458727),
+        new LatLng(51.1079945, 17.0419323)
+    };
+
+    private int _nNextPointToTravelIndex = 0;
+    private int _nIntervalValue = 1000 * 10;
+    private boolean _bIsFirstTravelLoad = true;
+    private boolean _bIsTravellingPaused = false;
+
+    private void startTraveling() {
+        this.stopTravelling();
+
+        _objHandlerTravelling = new Handler();
+        _objHandlerTravelling.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(_bIsTravellingPaused) {
+                    _objHandlerTravelling.postDelayed(this, _nIntervalValue);
+                }
+                else {
+                    Location objLocationCurrent = new Location("dummy");
+                    objLocationCurrent.setLongitude(_arrSimulationPoints[_nSimulationPointIndex].longitude);
+                    objLocationCurrent.setLatitude(_arrSimulationPoints[_nSimulationPointIndex].latitude);
+
+                    WebAPIManager.RouteSpot objRouteSpotFound = null;
+
+                    for (WebAPIManager.RouteSpot objRouteSpot : _objRoute.Spots) {
+                        if (GoogleMapsManager.isLocationNearToAnotherLocation(objLocationCurrent.getLatitude(), objLocationCurrent.getLongitude(), objRouteSpot.CoorX, objRouteSpot.CoorY, 100)) {
+                            objRouteSpotFound = objRouteSpot;
+                            break;
+                        }
+                    }
+
+                    if (objRouteSpotFound != null) {
+                        _bIsTravellingPaused = true;
+                    }
+
+                    MarkerOptions objMarkerOptions = new MarkerOptions();
+                    objMarkerOptions.position(new LatLng(objLocationCurrent.getLatitude(), objLocationCurrent.getLongitude()));
+                    objMarkerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.yellow_man));
+
+                    if (_objMarkerCurrentLocation != null) {
+                        _objMarkerCurrentLocation.remove();
+                    }
+
+                    _objMarkerCurrentLocation = _objGoogleMap.addMarker(objMarkerOptions);
+
+                    setNewTravelPointToPolyline(_objGoogleMap, objLocationCurrent.getLatitude(), objLocationCurrent.getLongitude(), _objRoute.Spots[_nNextPointToTravelIndex].CoorX, _objRoute.Spots[_nNextPointToTravelIndex].CoorY, _bIsFirstTravelLoad);
+                    _bIsFirstTravelLoad = false;
+
+                    _nSimulationPointIndex++;
+
+                    if (_nSimulationPointIndex >= _arrSimulationPoints.length) {
+                        stopTravelling();
+                    } else {
+                        _objHandlerTravelling.postDelayed(this, _nIntervalValue);
+                    }
+                }
+            }
+        }, 1);
+    }
+
+    private void stopTravelling() {
+        _nSimulationPointIndex = 0;
+        _nNextPointToTravelIndex = 0;
+        _nIntervalValue = 1;
+        _bIsTravellingPaused = false;
+
+        if(_objMarkerCurrentLocation != null) {
+            _objMarkerCurrentLocation.remove();
+        }
+        _objMarkerCurrentLocation = null;
+
+        _bIsFirstTravelLoad = true;
+        if(_objHandlerTravelling != null) {
+            _objHandlerTravelling.removeCallbacksAndMessages(null);
+        }
     }
 }
