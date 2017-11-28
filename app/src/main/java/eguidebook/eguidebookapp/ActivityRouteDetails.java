@@ -122,6 +122,8 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             findViewById(R.id.main_content).setVisibility(View.GONE);
             findViewById(R.id.fab_delete_route).setVisibility(View.VISIBLE);
             findViewById(R.id.fab_start_travel).setVisibility(View.VISIBLE);
+            getSupportFragmentManager().beginTransaction().remove(_objFragmentSpotDetails).commit();
+            _objFragmentSpotDetails = null;
             this._bIsTravellingPaused = false;
         }
         else {
@@ -913,7 +915,7 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
                             FragmentManager objFragmentManager = getSupportFragmentManager();
                             FragmentTransaction objFragmentTransaction = objFragmentManager.beginTransaction();
                             _objFragmentSpotDetails = FragmentSpotDetails.newInstance(objGetSpotBySpotIDReply.Spot);
-                            objFragmentTransaction.replace(R.id.main_content, _objFragmentSpotDetails).addToBackStack(null);
+                            objFragmentTransaction.replace(R.id.main_content, _objFragmentSpotDetails);
                             objFragmentTransaction.commit();
                             findViewById(R.id.fab_delete_route).setVisibility(View.GONE);
                             findViewById(R.id.fab_start_travel).setVisibility(View.GONE);
