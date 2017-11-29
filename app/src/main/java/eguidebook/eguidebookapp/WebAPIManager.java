@@ -102,6 +102,7 @@ public class WebAPIManager {
 
     public class LoginReply extends WebAPIReply {
         public SpotCategory[] SpotCategories;
+        public int RoutesCount;
 
         public ArrayList<SpotCategory> getSpotCategoriesAsArrayList() {
             return new ArrayList<>(Arrays.asList(this.SpotCategories));
@@ -297,10 +298,10 @@ public class WebAPIManager {
         }
     }
 
-    public GetSpotsByReply getSpotsBy(String strSpotCategoryID) {
+    public GetSpotsByReply getSpotsBy(String strSpotCategoryID, String strSpotName) {
         GetSpotsByReply objGetSpotsByReply = null;
         try {
-            objGetSpotsByReply = new Gson().fromJson(this.downloadString(strBaseURL + "/api/Spot/GetBy?CategoryID=" + strSpotCategoryID + "&CoorX=&CoorY="), GetSpotsByReply.class);
+            objGetSpotsByReply = new Gson().fromJson(this.downloadString(strBaseURL + "/api/Spot/GetBy?CategoryID=" + strSpotCategoryID + "&SpotName=" + strSpotName + "&CoorX=&CoorY="), GetSpotsByReply.class);
         }
         catch (Exception ex) { }
 

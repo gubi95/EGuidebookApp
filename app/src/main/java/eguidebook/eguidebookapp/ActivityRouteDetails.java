@@ -3,6 +3,7 @@ package eguidebook.eguidebookapp;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -127,7 +128,9 @@ public class ActivityRouteDetails extends FragmentActivity implements OnMapReady
             this._bIsTravellingPaused = false;
         }
         else {
-            super.onBackPressed();
+            Intent objIntent = new Intent(this, MainActivity.class);
+            objIntent.putExtra("goToRouteList", true);
+            this.startActivity(objIntent);
         }
     }
 

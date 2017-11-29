@@ -52,6 +52,7 @@ public class FragmentRouteList extends Fragment {
 
                 if(getAllRoutesReply.isSuccess() && getAllRoutesReply.Routes != null) {
                      _listRoute = new ArrayList<>(Arrays.asList(getAllRoutesReply.Routes));
+                     EGuidebookApplication.mRoutesCount = _listRoute.size();
                     loadRecyclerViewRoutes(getView(), _listRoute);
                 }
 

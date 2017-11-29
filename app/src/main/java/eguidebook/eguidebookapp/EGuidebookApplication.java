@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class EGuidebookApplication {
     public static String mUsername;
     public static String mPassword;
+    public static int mRoutesCount = 0;
 
     public static ArrayList<WebAPIManager.SpotCategory> mSpotCategories;
 

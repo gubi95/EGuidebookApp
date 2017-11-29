@@ -118,9 +118,10 @@ public class FragmentSpotsByCategory extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
-    public static FragmentSpotsByCategory newInstance(String strSpotCategoryID) {
+    public static FragmentSpotsByCategory newInstance(String strSpotCategoryID, String strSpotName) {
         Bundle objBundle = new Bundle();
         objBundle.putString("SpotCategoryID", strSpotCategoryID);
+        objBundle.putString("SpotName", strSpotName);
 
         FragmentSpotsByCategory objFragmentSpotsByCategory = new FragmentSpotsByCategory();
         objFragmentSpotsByCategory.setArguments(objBundle);
@@ -140,7 +141,9 @@ public class FragmentSpotsByCategory extends Fragment {
         objView.findViewById(R.id.divider_category_name).setVisibility(View.GONE);
         objView.findViewById(R.id.iv_spot_category_image).setVisibility(View.GONE);
 
-        new GetSpotsAsyncTask(getArguments().getString("SpotCategoryID")).execute();
+        new GetSpotsAsyncTask(
+                getArguments().getString("SpotCategoryID", ""),
+                getArguments().getString("SpotName", "")).execute();
 
         ((MainActivity)getActivity()).setTopBarTitle("Miejsca");
         ((MainActivity)getActivity()).showHideSearchIcon(true);
@@ -180,9 +183,11 @@ public class FragmentSpotsByCategory extends Fragment {
 
     private class GetSpotsAsyncTask extends AsyncTask<Void, Void, WebAPIManager.GetSpotsByReply> {
         private String _strSpotCategoryID;
+        private String _strSpotName;
 
-        public GetSpotsAsyncTask(String strSpotCategoryID) {
+        public GetSpotsAsyncTask(String strSpotCategoryID, String strSpotName) {
             this._strSpotCategoryID = strSpotCategoryID;
+            this._strSpotName = strSpotName;
         }
 
         @Override
@@ -191,12 +196,23 @@ public class FragmentSpotsByCategory extends Fragment {
                 Thread.sleep(1000);
             }
             catch (Exception ex) { }
-            return new WebAPIManager().getSpotsBy(_strSpotCategoryID);
+            return new WebAPIManager().getSpotsBy(_strSpotCategoryID, _strSpotName);
         }
 
         @Override
         protected void onPostExecute(WebAPIManager.GetSpotsByReply objGetSpotsByReply) {
-            loadTitle(this._strSpotCategoryID);
+            if(!PLHelpers.stringIsNullOrEmpty(_strSpotName)) {
+                TextView tvSpotCatName = (getView().findViewById(R.id.tv_spot_category_name));
+                ImageView ivSpotCatImage = (getView().findViewById(R.id.iv_spot_category_image));
+                tvSpotCatName.setText("\"" + _strSpotName + "\"");
+                ivSpotCatImage.setImageBitmap(null);
+                tvSpotCatName.setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.divider_category_name).setVisibility(View.VISIBLE);
+                ivSpotCatImage.setVisibility(View.VISIBLE);
+            }
+            else {
+                loadTitle(this._strSpotCategoryID);
+            }
 
             if(objGetSpotsByReply != null && objGetSpotsByReply.isSuccess()) {
                 loadGridView(objGetSpotsByReply.getSpotsAsArrayList());

@@ -94,6 +94,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (!objLoginReply.isSuccess()) {
                             EGuidebookApplication.mUsername = "";
                             EGuidebookApplication.mPassword = "";
+                            EGuidebookApplication.mRoutesCount = 0;
 
                             switch(objLoginReply.Code) {
                                 case WebAPIManager.CODE_USER_ALREADY_EXISTS:
@@ -110,6 +111,7 @@ public class LoginActivity extends AppCompatActivity {
                         } else {
                             EGuidebookApplication.mSpotCategories = objLoginReply.getSpotCategoriesAsArrayList() != null ?
                                     objLoginReply.getSpotCategoriesAsArrayList() : new ArrayList<WebAPIManager.SpotCategory>();
+                            EGuidebookApplication.mRoutesCount = objLoginReply.RoutesCount;
 
                             startActivity(new Intent(objActivityCurrent, MainActivity.class));
                         }

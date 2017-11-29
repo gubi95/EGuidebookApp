@@ -50,7 +50,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         enableExpandableList();
 
-        this.goToMainView();
+        boolean bGoToRouteList = getIntent().getBooleanExtra("goToRouteList", false);
+
+        if(bGoToRouteList) {
+            this.goToRouteListView();
+        }
+        else {
+            this.goToMainView();
+        }
     }
 
     @Override
@@ -63,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 goToMainView();
             }
             else if(_objFragmentCreateSpot != null && _objFragmentCreateSpot.isVisible()) {
+                goToMainView();
+            }
+            else if(_objFragmentSpotsByCategory != null && _objFragmentSpotsByCategory.isVisible()) {
                 goToMainView();
             }
             else if(_objFragmentMainView != null && _objFragmentMainView.isVisible()) {
@@ -229,11 +239,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // spot by category
                 if(groupPosition == 1) {
                     String strSpotCategoryID = listExpandableItem.get(1).getChildren().get(childPosition).getCustomID();
-                    FragmentManager objFragmentManager = getSupportFragmentManager();
-                    FragmentTransaction objFragmentTransaction = objFragmentManager.beginTransaction();
-                    _objFragmentSpotsByCategory = FragmentSpotsByCategory.newInstance(strSpotCategoryID);
-                    objFragmentTransaction.replace(R.id.main_content, _objFragmentSpotsByCategory);
-                    objFragmentTransaction.commit();
+                    goToSpotList(strSpotCategoryID, "");
                 }
 
                 closeDrawer();
@@ -268,4 +274,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         objFragmentTransaction.replace(R.id.main_content, _objFragmentRouteList);
         objFragmentTransaction.commit();
     }
+
+    public void goToSpotList(String strSpotCategoryID, String strSpotName) {
+        FragmentManager objFragmentManager = getSupportFragmentManager();
+        FragmentTransaction objFragmentTransaction = objFragmentManager.beginTransaction();
+        _objFragmentSpotsByCategory = FragmentSpotsByCategory.newInstance(strSpotCategoryID, strSpotName);
+        objFragmentTransaction.replace(R.id.main_content, _objFragmentSpotsByCategory);
+        objFragmentTransaction.commit();
+    }
+
 }

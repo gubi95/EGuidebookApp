@@ -6,9 +6,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class FragmentMainView extends Fragment {
@@ -18,6 +21,8 @@ public class FragmentMainView extends Fragment {
         final View objView = inflater.inflate(R.layout.fragment_main_view, container, false);
 
         this.setButtons(objView);
+        this.setRoutesCount(objView);
+        this.setSearchEditText(objView);
         this.setTemperatureAndCity(objView);
 
         ((MainActivity) getActivity()).setTopBarTitle("Główna");
@@ -43,6 +48,28 @@ public class FragmentMainView extends Fragment {
         });
     }
 
+    private void setRoutesCount(View objView) {
+        ((TextView)objView.findViewById(R.id.tv_routes_count)).setText(String.valueOf(EGuidebookApplication.mRoutesCount));
+    }
+
+    private void setSearchEditText(View objView) {
+
+        ((EditText) objView.findViewById(R.id.et_main_view_find_spot)).setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    String strTextSearch = v.getText().toString().toLowerCase().trim();
+                    if(!strTextSearch.equals("")) {
+                        PLHelpers.hideKeyboard(getActivity());
+                        ((MainActivity) getActivity()).goToSpotList("", strTextSearch);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
     @SuppressLint("StaticFieldLeak")
     public void setTemperatureAndCity(final View objView) {
         final Location objLocation = EGuidebookApplication.mGPSTrackerService.getLocation();
@@ -61,6 +88,7 @@ public class FragmentMainView extends Fragment {
             protected void onPostExecute(Void aVoid) {
                 ((TextView) objView.findViewById(R.id.tv_city_name)).setText(EGuidebookApplication.mLastSetCityName);
                 ((TextView) objView.findViewById(R.id.tv_city_temperature)).setText(String.valueOf(EGuidebookApplication.mLastSetTemperature) + " \u2103");
+                ((TextView) getActivity().findViewById(R.id.tv_nav_city_name)).setText(EGuidebookApplication.mLastSetCityName);
             }
         }.execute();
     }

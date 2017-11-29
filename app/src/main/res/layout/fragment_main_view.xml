@@ -34,6 +34,7 @@
                     android:text="Trasy"/>
 
                 <TextView
+                    android:id="@+id/tv_routes_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="30sp"
@@ -146,6 +147,57 @@
                     android:layout_width="70dp"
                     android:layout_height="70dp"
                     android:src="@drawable/ic_cloud_black_24dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_redirect_to_creating_spot"
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:orientation="horizontal"
+            android:background="#7C86CE">
+
+            <LinearLayout
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:background="#5A69C6"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:src="@drawable/ic_search_route_details_24dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingTop="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="30sp"
+                    android:textColor="#EEEEEE"
+                    android:fontFamily="sans-serif-light"
+                    android:text="Znajdź punkt"/>
+
+                <EditText
+                    android:id="@+id/et_main_view_find_spot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionSearch"
+                    android:textColor="#EEEEEE"
+                    android:backgroundTint="#EEEEEE"
+                    android:inputType="text"/>
 
             </LinearLayout>
 
